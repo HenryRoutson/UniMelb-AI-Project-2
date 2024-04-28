@@ -1,0 +1,14 @@
+TODO
+
+
+
+not fast enough, coming in way to close to 30 seconds
+
+
+0 Write report
+
+2 Clearing extra rows before the primary row
+https://edstem.org/au/courses/15502/discussion/1825056
+
+3 make pass other test cases
+
