@@ -1,0 +1,22 @@
+
+How the project work is split up
+and due dates to finish before the actual due date
+
+B for Ben 
+H for Henry
+
+Overall plan 
+
+  H create random bot 
+  B create greedy bot
+  H create MCTS bot
+  B test MCTS bot against all other bots
+  H optimise performance
+  B write report
+
+
+Finish everything by 8th april
+
+HENRY
+  improve performance of part a by doing custom board copy
+  
