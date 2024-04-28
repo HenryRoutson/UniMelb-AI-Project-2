@@ -440,9 +440,21 @@ def placeActionsFromBoard(board : Board) -> PlaceActionLst:
 
 
 
+def qcopy(board : Board) -> Board :
+  newBoard : Board = dict()
+  for item in board.items() :
+
+    key : Coord = item[0]
+    value : PlayerColor = item[1]
+
+    newBoard[key] = value
+
+  return newBoard
+
 def deriveBoard(original_board : Board, PlaceActionLst : PlaceActionLst) -> tuple[Board, bool] :
 
   board = copy.deepcopy(original_board)
+  #board = qcopy(original_board)
   
   for place in PlaceActionLst :
      for coord in place.coords :
