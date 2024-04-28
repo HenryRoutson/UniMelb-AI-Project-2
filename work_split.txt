@@ -7,6 +7,7 @@ H for Henry
 
 Overall plan 
 
+  H improve performance of part a code by doing custom board copy ✅
   H create random bot 
   B create greedy bot
   H create MCTS bot
@@ -14,9 +15,5 @@ Overall plan
   H optimise performance
   B write report
 
-
-Finish everything by 8th april
-
-HENRY
-  improve performance of part a by doing custom board copy
+  
   
