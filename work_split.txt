@@ -8,6 +8,7 @@ H for Henry
 Overall plan 
 
   H improve performance of part a code by doing custom board copy ✅
+  H get code running
   H create random bot 
   B create greedy bot
   H create MCTS bot
