@@ -105,7 +105,7 @@ def search(
     #allPlaceOptionsForPiecesAroundCenter(PIECES_FOR_GENERATING)
 
     # For actual search -------------------------------------------------
-    return heuristic_search(board, target)
+    return heuristic_search(board, target) # type: ignore
 
     """
     with cProfile.Profile() as pr:
