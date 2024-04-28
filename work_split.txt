@@ -9,10 +9,16 @@ Overall plan
 
   H improve performance of part a code by doing custom board copy ✅
   H get code running ✅
-  H create random bot 
-  B create greedy bot
-  H create MCTS bot
-  H optimise performance
+  (Don't need random bot as this is already on gradescope)
+  H create working MCTS bot
+
+    create tree structs 
+    create min max logic
+    create backprop logic
+    create rollout logic
+
+
+  B optimise performance
   B write report
 
   
