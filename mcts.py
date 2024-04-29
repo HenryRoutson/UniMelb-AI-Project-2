@@ -53,6 +53,7 @@ def getMinMaxPath(tree : GameTree, isMaxFirst : bool) -> Path :
     next = getMinOrMaxFromChildren(tree.children, isMaxFirst)
     path.append(next)
     tree = next
+    isMaxFirst = not isMaxFirst
 
   return path
 
