@@ -10,16 +10,12 @@ Overall plan
   H improve performance of part a code by doing custom board copy ✅
   H get code running ✅
   (Don't need random bot as this is already on gradescope)
-  
-
-
-  H create working MCTS bot
-
-    create tree structs 
-    create min max logic
-    create backprop logic
-    create rollout logic
-
+  H create tree structs ✅
+  H create min max logic ✅
+  H create backprop logic ✅
+  H create rollout logic ✅
+  H get MCTS working on simple single file game example
+  B transfer MCTS to more complex example to run program
   B optimise performance
   B write report
 
