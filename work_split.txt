@@ -10,6 +10,9 @@ Overall plan
   H improve performance of part a code by doing custom board copy ✅
   H get code running ✅
   (Don't need random bot as this is already on gradescope)
+
+
+  
   H create working MCTS bot
 
     create tree structs 
