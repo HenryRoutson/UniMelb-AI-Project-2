@@ -17,7 +17,6 @@ Overall plan
     create backprop logic
     create rollout logic
 
-
   B optimise performance
   B write report
 
