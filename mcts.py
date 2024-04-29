@@ -3,11 +3,18 @@ from typing import Optional
 import random
 
 WinsAndGames = tuple[int, int]
+
+# define simple game for testing
+State = int
+Action = int
+
+
 class GameTree : # / node
 
-  def __init__(self, children : list, winProp : WinsAndGames) -> None:
+  def __init__(self, children : list, winProp : WinsAndGames, state : State) -> None:
     self.children : list[GameTree] = children
     self.winProp : WinsAndGames = winProp # win proportion
+    self.state = state
 
 Children = list[GameTree]
 Path = list[GameTree]
@@ -66,6 +73,41 @@ def playout(tree : GameTree) -> bool :
 
 
 
+
+
+
+
+
+def getActionsFromState(state : State) -> list[Action] :
+  return [1, -1]
+
   
+def applyActionToState(state : State, action : Action) -> State :
+  return state + action
+
+def makeMove(state : State) -> Action :
+
+  actions = getActionsFromState(state)
+  for action in actions :
+    newState = applyActionToState(state, action)
+
+  # TODO
 
 
+  """
+
+  1 Selection 
+  2 Expansion 
+  3 Simulation
+  4 Back-propagation
+  """
+
+
+  return 1
+
+  
+def isStateWin(state : State, isPlayer1 : bool) -> bool :
+  if isPlayer1 :
+    return state > 5
+  else :
+    return state < -5
