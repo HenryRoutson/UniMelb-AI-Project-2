@@ -14,6 +14,7 @@ Overall plan
   H create min max logic ✅
   H create backprop logic ✅
   H create rollout logic ✅
+  H visualise MCTS to verify
   H get MCTS working on simple single file game example
   B transfer MCTS to more complex example to run program
   B optimise performance
