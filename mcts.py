@@ -26,6 +26,7 @@ Path = list[GameTree]
 
 def scoreFromwinProp(winProp : WinsAndGames) -> float :
   # can make more complicated with uncertainty from lower number of games
+  if winProp[0] == 0 : return 1.0
   return winProp[1] / winProp[0]
 
 def updateWinsAndGames(winProp : WinsAndGames, didWin : bool) -> WinsAndGames :
@@ -101,8 +102,8 @@ def makeMoveWith(initState : State, tree : GameTree, isMaxFirst: bool) -> GameTr
 
   for index in path_i :
 
-    assert(leafNode.action)
-    leafState = applyActionToState(leafState, leafNode.action)
+    if (leafNode.action) :
+      leafState = applyActionToState(leafState, leafNode.action)
     leafNode = leafNode.children[index]
 
   action = rolloutStrategy(leafState, isMaxFirst)
@@ -123,7 +124,7 @@ def makeMoveWith(initState : State, tree : GameTree, isMaxFirst: bool) -> GameTr
   curNode = tree
   for i in range(len(path_i)) :
     curNode.winProp = updateWinsAndGames(curNode.winProp, didWin)
-    curNode = curNode.children[i]
+    curNode = curNode.children[path_i[i]]
 
   return tree
 
@@ -141,4 +142,6 @@ def tieBreaker(state : State) -> bool :
 # call code =====
 
 gameTree = GameTree([], (0,0), None)
-print(makeMoveWith(0, gameTree, True))
+
+for _ in range(100) :
+  gameTree = makeMoveWith(0, gameTree, True)
