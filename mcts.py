@@ -73,6 +73,7 @@ MAX_DEPTH = 9
 
 def rolloutSim(state : State, isMaxFirst: bool) -> bool :
 
+  depth = 0
   while depth != MAX_DEPTH :
 
     action = rolloutStrategy(state, isMaxFirst)
@@ -140,4 +141,4 @@ def tieBreaker(state : State) -> bool :
 # call code =====
 
 gameTree = GameTree([], (0,0), None)
-makeMoveWith(0, gameTree, True)
+print(makeMoveWith(0, gameTree, True))
