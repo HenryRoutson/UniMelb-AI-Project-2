@@ -1,9 +1,9 @@
 
 from typing import Optional
-
+import random
 
 WinsAndGames = tuple[int, int]
-class GameTree :
+class GameTree : # / node
 
   def __init__(self, children : list, winProp : WinsAndGames) -> None:
     self.children : list[GameTree] = children
@@ -25,8 +25,6 @@ def updatePathWinsAndGames(path : Path, didWin : bool) -> Path :
   for i in range(len(path)) :
     path[i].winProp = updateWinsAndGames(path[i].winProp, didWin)
   return path
-
-
 
 
 def getMinOrMaxFromChildren(children : Children, isMax) -> GameTree :
@@ -56,6 +54,16 @@ def getMinMaxPath(tree : GameTree, isMaxFirst : bool) -> Path :
     isMaxFirst = not isMaxFirst
 
   return path
+
+
+def playout(tree : GameTree) -> bool :
+  didWin = random.choice([True, False]) # TODO
+  return didWin
+
+
+
+# TODO simulate
+
 
 
   
