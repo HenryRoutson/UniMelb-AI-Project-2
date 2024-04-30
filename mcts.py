@@ -27,13 +27,14 @@ class GameTree : # / node
     # state is derived, as it takes too much space
 
 
-def printTree(tree : GameTree, state : Optional[State], indent = 0) :
-  print("    "*indent + "action  :" + str(tree.action) + " winprop :" + str(tree.winProp))
+def printTree(tree : GameTree, state : Optional[State], toIndent = 100, indent = 0) :
+  if indent > toIndent : return
+  print("    "*indent + "action  :" + str(tree.action) + " winprop :" + str(tree.winProp) + "state :" + str(state)) # TODO add state
   for t in tree.children :
     tmpState = None
     if state and t.action :
       tmpState = applyActionToState(state, t.action)
-    printTree(t, tmpState, indent + 1)
+    printTree(t, tmpState, indent=(indent + 1), toIndent=toIndent)
 
 
 
@@ -69,21 +70,22 @@ def getMinMaxPath(tree : GameTree, isMaxFirst : bool, state : State) -> tuple[li
     if (tree.action) :
       state = applyActionToState(state, tree.action)
 
+    isMaxFirst = not isMaxFirst # may have mixed up negative
     next_i = getMinOrMaxFromChildren(tree.children, isMaxFirst)
     next = tree.children[next_i]
     path.append(next)
     tree = next
-    isMaxFirst = not isMaxFirst
+    
 
   return path, state
 
 def getActionsFromState(state : State) -> list[Action] :
-  return [1, -1]
+  return [1, -1, -2] # TODO test this and check win rate
 
 def applyActionToState(state : State, action : Action) -> State :
   return state + action
 
-def rolloutStrategy(state : State, isMaxFirst: bool) :
+def rolloutStrategy(state : State, player: Player) :
   # TODO test doing this random and improving this
 
   action = random.choice(getActionsFromState(state))
@@ -167,10 +169,11 @@ def tieBreaker(state : State) -> Player :
 
 gameTree = GameTree([], (0,0), None)
 
-for _ in range(2) :
+for _ in range(20000) :
   gameTree = makeMoveWith(START_STATE, gameTree, PLAYER1)
-  printTree(gameTree, START_STATE)
-  print()
+  print("Tree")
+  printTree(gameTree, START_STATE, toIndent=3)
+
 
 # TODO now you can see the best move to make
 
