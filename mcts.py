@@ -136,14 +136,6 @@ assert(
 
 
 
-# TODO
-
-
-
-
-
-
-
 def getActionsFromState(state : State) -> list[Action] :
   return [100, 2, 1, -1, -2] # TODO test this and check win rate
 
