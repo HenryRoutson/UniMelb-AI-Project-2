@@ -45,8 +45,8 @@ Path = list[GameTree]
 
 def scoreFromwinProp(winProp : WinsAndGames) -> float :
   # can make more complicated with uncertainty from lower number of games
-  #if winProp[0] < 3 :  TODO
-  if winProp[0] == 0 :
+  if winProp[0] < 10 : 
+  #if winProp[0] == 0 :
     return 2.0 # exlore unexplored
   return winProp[1] / winProp[0]
 
