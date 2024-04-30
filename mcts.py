@@ -1,13 +1,19 @@
 
 # https://pythontutor.com/visualize.html
 
-PLAYER = False # TODO
+
+PLAYER1 = "positive"
+PLAYER2 = "negative"
+
+
+
 START_STATE = 0
 
 from typing import Optional
 import random
 
 WinsAndGames = tuple[int, int]
+Player = str
 
 # define simple game for testing
 State = int
@@ -55,18 +61,21 @@ def getMinOrMaxFromChildren(children : Children, isMax) -> int :
   max_index = scores.index(getValue)
   return max_index
 
-def getMinMaxPath(tree : GameTree, isMaxFirst : bool) -> list[int] :
+def getMinMaxPath(tree : GameTree, isMaxFirst : bool, state : State) -> tuple[list[GameTree], State] :
 
-  path_i : list[int] = [] # path indexes 
+  path : list[GameTree] = [tree] # path indexes 
   while tree.children != [] :
+
+    if (tree.action) :
+      state = applyActionToState(state, tree.action)
 
     next_i = getMinOrMaxFromChildren(tree.children, isMaxFirst)
     next = tree.children[next_i]
-    path_i.append(next_i)
+    path.append(next)
     tree = next
     isMaxFirst = not isMaxFirst
 
-  return path_i
+  return path, state
 
 def getActionsFromState(state : State) -> list[Action] :
   return [1, -1]
@@ -84,7 +93,7 @@ def rolloutStrategy(state : State, isMaxFirst: bool) :
 
 MAX_DEPTH = 9
 
-def rolloutSim(state : State, isMaxFirst: bool) -> bool :
+def rolloutSim(state : State, isMaxFirst: bool) -> Player :
 
   # TODO while testing
   """
@@ -104,68 +113,53 @@ def rolloutSim(state : State, isMaxFirst: bool) -> bool :
 
   return tieBreaker(state)
 
-def makeMoveWith(initState : State, tree : GameTree, isMaxFirst: bool) -> GameTree :
+def makeMoveWith(initState : State, tree : GameTree, player: Player) -> GameTree :
+  isMaxFirst = True
 
   # 1 Selection (min max)
-  path_i = getMinMaxPath(tree, isMaxFirst)
-  depth = len(path_i)
+  path, leafState = getMinMaxPath(tree, isMaxFirst, initState)
+  depth = len(path)
 
   # 2 Expansion (add a single node)
-
-  leafState = initState
-  leafNode = tree
-
-  # TODO this is slow to get leaf
-  for index in path_i :
-
-    if (leafNode.action) :
-      leafState = applyActionToState(leafState, leafNode.action)
-    leafNode = leafNode.children[index]
+  leafNode = path[-1]
+  leafActions = getActionsFromState(leafState)
+  for action in leafActions :
+    leafNode.children.append(GameTree([], (0, 0), action))
   
-  if (leafNode.action) :
-      leafState = applyActionToState(leafState, leafNode.action)
-
-
-
-  for i, action in enumerate(getActionsFromState(leafState)) :
-
-    leafNode.children.append(
-      GameTree([], (0, 0), action)
-    )
-  
-  path_i.append(random.choice(list(range(len(leafNode.children)))))
+  path.append(random.choice(leafNode.children))
 
   # 3 Simulation (rollout)
  
   # 3.1 derive state
-  state = applyActionToState(leafState, action)
+  action = path[-1].action
+  assert(action)
+  state = applyActionToState(leafState, action) # TODO where does this action come from
 
   # 3.2 simluate rollout
   whoWon = rolloutSim(state, isMaxFirst)
-  didWin = (whoWon == PLAYER)
+  didWin = (whoWon == player)
 
   # 4 Back-propagation (update win and games values)
-  curNode = tree
-  print(path_i)
-  for i in range(len(path_i)) :
-    
+  for curNode in path :
     curNode.winProp = updateWinsAndGames(curNode.winProp, didWin)
-    curNode = curNode.children[path_i[i]]
-  
-  curNode.winProp = updateWinsAndGames(curNode.winProp, didWin)
 
   return tree
 
-def isStateWin(state : State, isMax : bool) -> Optional[bool] :
+def isStateWin(state : State, isMax : bool) -> Optional[Player] :
   if isMax :
-    if state > 5 : return True
+    if state > 5 : return PLAYER1
   else :
-    if state < -5 : return False
+    if state < -5 : return PLAYER2
 
   return None
   
-def tieBreaker(state : State) -> bool :
-  return state > 0 
+def tieBreaker(state : State) -> Player :
+
+  if state > 0 :
+    return PLAYER1
+  else :
+    return PLAYER2
+
 
 # call code =====
 
@@ -173,8 +167,8 @@ def tieBreaker(state : State) -> bool :
 
 gameTree = GameTree([], (0,0), None)
 
-for _ in range(10) :
-  gameTree = makeMoveWith(START_STATE, gameTree, True)
+for _ in range(2) :
+  gameTree = makeMoveWith(START_STATE, gameTree, PLAYER1)
   printTree(gameTree, START_STATE)
   print()
 
@@ -185,3 +179,8 @@ for _ in range(10) :
 gameTree = GameTree([ GameTree([GameTree([], (1,0), -1)], (1,0), -1),  GameTree([], (0,1), 1)], (0,0), None)
 printTree(gameTree)
 """
+
+
+
+
+# TODO need to test min max
