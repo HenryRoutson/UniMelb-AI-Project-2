@@ -1,7 +1,8 @@
 
 # https://pythontutor.com/visualize.html
 
-PLAYER = False
+PLAYER = False # TODO
+START_STATE = 0
 
 from typing import Optional
 import random
@@ -20,10 +21,13 @@ class GameTree : # / node
     # state is derived, as it takes too much space
 
 
-def printTree(tree : GameTree, indent = 0) :
+def printTree(tree : GameTree, state : Optional[State], indent = 0) :
   print("    "*indent + "action  :" + str(tree.action) + " winprop :" + str(tree.winProp))
   for t in tree.children :
-    printTree(t, indent + 1)
+    tmpState = None
+    if state and t.action :
+      tmpState = applyActionToState(state, t.action)
+    printTree(t, tmpState, indent + 1)
 
 
 
@@ -34,7 +38,7 @@ Path = list[GameTree]
 
 def scoreFromwinProp(winProp : WinsAndGames) -> float :
   # can make more complicated with uncertainty from lower number of games
-  if winProp[0] == 0 : return 1.0
+  if winProp[0] == 0 : return 2.0 # exlore unexplored
   return winProp[1] / winProp[0]
 
 def updateWinsAndGames(winProp : WinsAndGames, didWin : bool) -> WinsAndGames :
@@ -82,6 +86,8 @@ MAX_DEPTH = 9
 
 def rolloutSim(state : State, isMaxFirst: bool) -> bool :
 
+  # TODO while testing
+  """
   depth = 0
   while depth != MAX_DEPTH :
 
@@ -94,6 +100,7 @@ def rolloutSim(state : State, isMaxFirst: bool) -> bool :
     isMaxFirst = not isMaxFirst
   
     depth += 1
+  """
 
   return tieBreaker(state)
 
@@ -114,12 +121,19 @@ def makeMoveWith(initState : State, tree : GameTree, isMaxFirst: bool) -> GameTr
     if (leafNode.action) :
       leafState = applyActionToState(leafState, leafNode.action)
     leafNode = leafNode.children[index]
+  
+  if (leafNode.action) :
+      leafState = applyActionToState(leafState, leafNode.action)
 
-  action = rolloutStrategy(leafState, isMaxFirst)
-  leafNode.children.append(
-    GameTree([], (0, 0), action)
-  )
-  path_i.append(0)
+
+
+  for i, action in enumerate(getActionsFromState(leafState)) :
+
+    leafNode.children.append(
+      GameTree([], (0, 0), action)
+    )
+  
+  path_i.append(random.choice(list(range(len(leafNode.children)))))
 
   # 3 Simulation (rollout)
  
@@ -155,19 +169,19 @@ def tieBreaker(state : State) -> bool :
 
 # call code =====
 
+
+
 gameTree = GameTree([], (0,0), None)
 
 for _ in range(10) :
-  gameTree = makeMoveWith(0, gameTree, True)
-  printTree(gameTree)
+  gameTree = makeMoveWith(START_STATE, gameTree, True)
+  printTree(gameTree, START_STATE)
   print()
+
+# TODO now you can see the best move to make
 
 
 """
 gameTree = GameTree([ GameTree([GameTree([], (1,0), -1)], (1,0), -1),  GameTree([], (0,1), 1)], (0,0), None)
 printTree(gameTree)
 """
-
-# TODO
-# fix backprop with simple line tree
-# increasing branching factor
