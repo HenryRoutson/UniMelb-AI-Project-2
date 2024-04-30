@@ -160,3 +160,7 @@ printTree(gameTree)
 gameTree = GameTree([ GameTree([GameTree([], (1,0), -1)], (1,0), -1),  GameTree([], (0,1), 1)], (0,0), None)
 printTree(gameTree)
 """
+
+# TODO
+# fix backprop with simple line tree
+# increasing branching factor
