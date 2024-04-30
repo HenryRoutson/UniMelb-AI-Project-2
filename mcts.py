@@ -19,6 +19,14 @@ class GameTree : # / node
     self.action = action 
     # state is derived, as it takes too much space
 
+
+def printTree(tree : GameTree, indent = 0) :
+  print("    "*indent + "action  :" + str(tree.action) + " winprop :" + str(tree.winProp))
+  for t in tree.children :
+    printTree(t, indent + 1)
+
+
+
 Children = list[GameTree]
 Path = list[GameTree]
 
@@ -143,5 +151,12 @@ def tieBreaker(state : State) -> bool :
 
 gameTree = GameTree([], (0,0), None)
 
-for _ in range(100) :
+for _ in range(10) :
   gameTree = makeMoveWith(0, gameTree, True)
+printTree(gameTree)
+
+
+"""
+gameTree = GameTree([ GameTree([GameTree([], (1,0), -1)], (1,0), -1),  GameTree([], (0,1), 1)], (0,0), None)
+printTree(gameTree)
+"""
