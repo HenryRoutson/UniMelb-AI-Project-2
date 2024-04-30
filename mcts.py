@@ -46,8 +46,6 @@ Path = list[GameTree]
 def scoreFromwinProp(winProp : WinsAndGames) -> float : # TODO need to seperate uncertainty from win rate
   # TODO use actual formula
   # can make more complicated with uncertainty from lower number of games
-  if winProp[0] < 25 : # exlore unexplored or uncertain
-    return 2.0 
   return winProp[1] / winProp[0]
 
 def updateWinsAndGames(winProp : WinsAndGames, didWin : bool) -> WinsAndGames :
@@ -56,6 +54,16 @@ def updateWinsAndGames(winProp : WinsAndGames, didWin : bool) -> WinsAndGames :
 def getMinOrMaxFromChildren(children : Children, isMax) -> int :
 
   assert(children != [])
+
+  # uncertainty
+
+  e = list(enumerate(children))
+  random.shuffle(e)
+  for i, c in e :
+    if c.winProp[1] < 25 : 
+      return i # explore unexplored
+
+  # win probability
   scores = list(map(lambda child : scoreFromwinProp(child.winProp), children))
 
   if isMax : getValue = max(scores)
