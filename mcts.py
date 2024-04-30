@@ -53,7 +53,7 @@ def getMinOrMaxFromChildren(children : Children, isMax) -> int :
 
 def getMinMaxPath(tree : GameTree, isMaxFirst : bool) -> list[int] :
 
-  path_i : list[int] = [] # path indexes
+  path_i : list[int] = [] # path indexes 
   while tree.children != [] :
 
     next_i = getMinOrMaxFromChildren(tree.children, isMaxFirst)
@@ -108,6 +108,7 @@ def makeMoveWith(initState : State, tree : GameTree, isMaxFirst: bool) -> GameTr
   leafState = initState
   leafNode = tree
 
+  # TODO this is slow to get leaf
   for index in path_i :
 
     if (leafNode.action) :
@@ -118,6 +119,7 @@ def makeMoveWith(initState : State, tree : GameTree, isMaxFirst: bool) -> GameTr
   leafNode.children.append(
     GameTree([], (0, 0), action)
   )
+  path_i.append(0)
 
   # 3 Simulation (rollout)
  
@@ -130,9 +132,13 @@ def makeMoveWith(initState : State, tree : GameTree, isMaxFirst: bool) -> GameTr
 
   # 4 Back-propagation (update win and games values)
   curNode = tree
+  print(path_i)
   for i in range(len(path_i)) :
+    
     curNode.winProp = updateWinsAndGames(curNode.winProp, didWin)
     curNode = curNode.children[path_i[i]]
+  
+  curNode.winProp = updateWinsAndGames(curNode.winProp, didWin)
 
   return tree
 
@@ -153,7 +159,8 @@ gameTree = GameTree([], (0,0), None)
 
 for _ in range(10) :
   gameTree = makeMoveWith(0, gameTree, True)
-printTree(gameTree)
+  printTree(gameTree)
+  print()
 
 
 """
