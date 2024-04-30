@@ -125,7 +125,7 @@ def makeMoveWith(initState : State, tree : GameTree, player: Player) -> GameTree
   # 2 Expansion (add a single node)
   leafNode = path[-1]
   leafActions = getActionsFromState(leafState)
-  for action in leafActions :
+  for action in leafActions : # TODO this will take up lots of space
     leafNode.children.append(GameTree([], (0, 0), action))
   
   path.append(random.choice(leafNode.children))
@@ -163,27 +163,29 @@ def tieBreaker(state : State) -> Player :
     return PLAYER2
 
 
+
+def mcts(fromState : State, iterations = 200) -> Action :
+
+  gameTree = GameTree([], (0,0), None) # starting node
+  for _ in range(iterations) :
+    gameTree = makeMoveWith(fromState, gameTree, PLAYER1)
+    print("Tree")
+    printTree(gameTree, fromState, toIndent=2)
+
+  nodes, endState = getMinMaxPath(gameTree, True, fromState)
+  bestAction = nodes[1].action # 1 to ignore start node
+  assert(bestAction)
+  return bestAction
+
+
 # call code =====
 
 
-
-gameTree = GameTree([], (0,0), None)
-
-for _ in range(20000) :
-  gameTree = makeMoveWith(START_STATE, gameTree, PLAYER1)
-  print("Tree")
-  printTree(gameTree, START_STATE, toIndent=2)
+# TODO player as input
+print(mcts(fromState=0, iterations = 200))
 
 
-# TODO now you can see the best move to make
-
-
-"""
-gameTree = GameTree([ GameTree([GameTree([], (1,0), -1)], (1,0), -1),  GameTree([], (0,1), 1)], (0,0), None)
-printTree(gameTree)
-"""
-
-
-
-
+# TODO but as selecting wrong value in min max
 # TODO need to test min max
+
+
