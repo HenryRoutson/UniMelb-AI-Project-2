@@ -80,7 +80,7 @@ def getMinMaxPath(tree : GameTree, isMaxFirst : bool, state : State) -> tuple[li
   return path, state
 
 def getActionsFromState(state : State) -> list[Action] :
-  return [1, -1, -2] # TODO test this and check win rate
+  return [2, 1, -1, -2] # TODO test this and check win rate
 
 def applyActionToState(state : State, action : Action) -> State :
   return state + action
@@ -172,7 +172,7 @@ gameTree = GameTree([], (0,0), None)
 for _ in range(20000) :
   gameTree = makeMoveWith(START_STATE, gameTree, PLAYER1)
   print("Tree")
-  printTree(gameTree, START_STATE, toIndent=3)
+  printTree(gameTree, START_STATE, toIndent=2)
 
 
 # TODO now you can see the best move to make
