@@ -1,13 +1,12 @@
 
-# https://pythontutor.com/visualize.html
-
-
 PLAYER1 = "positive"
 PLAYER2 = "negative"
-
-
-
+MAX_DEPTH = 9
 START_STATE = 0
+
+
+
+
 
 from typing import Optional
 import random
@@ -16,8 +15,23 @@ WinsAndGames = tuple[int, int]
 Player = str
 
 # define simple game for testing
+"""
+
+Action is adding a number
+State is a number
+Player positive wins if the number if more positive
+Negative if negative
+
+"""
 State = int
 Action = int
+
+
+
+
+
+
+
 class GameTree : # / node
 
   def __init__(self, children : list, winProp : WinsAndGames, action : Optional[Action]) -> None:
@@ -72,6 +86,8 @@ def getMinOrMaxFromChildren(children : Children, isMax) -> int :
   max_index = scores.index(getValue)
   return max_index
 
+
+# TODO test
 def getMinMaxPath(tree : GameTree, isMaxFirst : bool, state : State) -> tuple[list[GameTree], State] :
 
   path : list[GameTree] = [tree] # path indexes 
@@ -89,27 +105,50 @@ def getMinMaxPath(tree : GameTree, isMaxFirst : bool, state : State) -> tuple[li
 
   return path, state
 
+
+
+testTree = GameTree(winProp=(0,0), children=[
+  GameTree(winProp=(2,1), children=[], action=None),
+  GameTree(winProp=(3,1), children=[   GameTree(winProp=(1,1), children=[], action=None),   GameTree(winProp=(0,1), children=[], action=None)], action=None)
+], action=None)
+
+assert(
+  
+  
+  list(map(lambda x : scoreFromwinProp(x.winProp) ,getMinMaxPath(
+    testTree,
+    True,
+    START_STATE
+  ))) == [3.0, 0.0]
+
+
+)
+
+# TODO
+
+
+
+
+
+
+
 def getActionsFromState(state : State) -> list[Action] :
-  return [2, 1, -1, -2] # TODO test this and check win rate
+  return [100, 2, 1, -1, -2] # TODO test this and check win rate
 
 def applyActionToState(state : State, action : Action) -> State :
   return state + action
 
 def rolloutStrategy(state : State, player: Player) :
-  # TODO test doing this random and improving this
-
   action = random.choice(getActionsFromState(state))
-  #action = int(isMaxFirst)
-  
   return action
 
-MAX_DEPTH = 9
+
 
 def rolloutSim(state : State, isMaxFirst: bool) -> Player :
 
   # TODO while testing
   """
-  depth = 0
+  depth = 0 
   while depth != MAX_DEPTH :
 
     action = rolloutStrategy(state, isMaxFirst)
@@ -195,4 +234,6 @@ def mcts(fromState : State = 0, iterations = 2000, player : Player = PLAYER1) ->
 print(mcts())
 
 
-# TODO doesn't look like it's exploring 0,0 on other levels prob bug with min max 
+
+# TODO impliment depth logic
+# TODO add in formula 
