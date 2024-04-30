@@ -29,10 +29,10 @@ class GameTree : # / node
 
 def printTree(tree : GameTree, state : Optional[State], toIndent = 100, indent = 0) :
   if indent > toIndent : return
-  print("    "*indent + "action  :" + str(tree.action) + " winprop :" + str(tree.winProp) + "state :" + str(state)) # TODO add state
+  print("    "*indent + "action : " + str(tree.action) + ", winprop :" + str(tree.winProp) + ", state : " + str(state)) # TODO add state
   for t in tree.children :
-    tmpState = None
-    if state and t.action :
+    tmpState = state
+    if state != None and t.action :
       tmpState = applyActionToState(state, t.action)
     printTree(t, tmpState, indent=(indent + 1), toIndent=toIndent)
 
@@ -45,7 +45,9 @@ Path = list[GameTree]
 
 def scoreFromwinProp(winProp : WinsAndGames) -> float :
   # can make more complicated with uncertainty from lower number of games
-  if winProp[0] == 0 : return 2.0 # exlore unexplored
+  #if winProp[0] < 3 :  TODO
+  if winProp[0] == 0 :
+    return 2.0 # exlore unexplored
   return winProp[1] / winProp[0]
 
 def updateWinsAndGames(winProp : WinsAndGames, didWin : bool) -> WinsAndGames :
@@ -164,11 +166,11 @@ def tieBreaker(state : State) -> Player :
 
 
 
-def mcts(fromState : State, iterations = 200) -> Action :
+def mcts(fromState : State = 0, iterations = 200, player : Player = PLAYER1) -> Action :
 
   gameTree = GameTree([], (0,0), None) # starting node
   for _ in range(iterations) :
-    gameTree = makeMoveWith(fromState, gameTree, PLAYER1)
+    gameTree = makeMoveWith(fromState, gameTree, player)
     print("Tree")
     printTree(gameTree, fromState, toIndent=2)
 
@@ -182,9 +184,9 @@ def mcts(fromState : State, iterations = 200) -> Action :
 
 
 # TODO player as input
-print(mcts(fromState=0, iterations = 200))
+print(mcts())
 
-
+# TODO fix state being none
 # TODO but as selecting wrong value in min max
 # TODO need to test min max
 
