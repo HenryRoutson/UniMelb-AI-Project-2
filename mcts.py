@@ -43,11 +43,11 @@ Path = list[GameTree]
 
 # functions =====
 
-def scoreFromwinProp(winProp : WinsAndGames) -> float :
+def scoreFromwinProp(winProp : WinsAndGames) -> float : # TODO need to seperate uncertainty from win rate
+  # TODO use actual formula
   # can make more complicated with uncertainty from lower number of games
-  if winProp[0] < 10 : 
-  #if winProp[0] == 0 :
-    return 2.0 # exlore unexplored
+  if winProp[0] < 25 : # exlore unexplored or uncertain
+    return 2.0 
   return winProp[1] / winProp[0]
 
 def updateWinsAndGames(winProp : WinsAndGames, didWin : bool) -> WinsAndGames :
@@ -166,13 +166,13 @@ def tieBreaker(state : State) -> Player :
 
 
 
-def mcts(fromState : State = 0, iterations = 200, player : Player = PLAYER1) -> Action :
+def mcts(fromState : State = 0, iterations = 2000, player : Player = PLAYER1) -> Action :
 
   gameTree = GameTree([], (0,0), None) # starting node
   for _ in range(iterations) :
     gameTree = makeMoveWith(fromState, gameTree, player)
     print("Tree")
-    printTree(gameTree, fromState, toIndent=2)
+    printTree(gameTree, fromState, toIndent=3)
 
   nodes, endState = getMinMaxPath(gameTree, True, fromState)
   bestAction = nodes[1].action # 1 to ignore start node
@@ -183,11 +183,8 @@ def mcts(fromState : State = 0, iterations = 200, player : Player = PLAYER1) -> 
 # call code =====
 
 
-# TODO player as input
+
 print(mcts())
 
-# TODO fix state being none
-# TODO but as selecting wrong value in min max
-# TODO need to test min max
 
-
+# TODO doesn't look like it's exploring 0,0 on other levels prob bug with min max 
