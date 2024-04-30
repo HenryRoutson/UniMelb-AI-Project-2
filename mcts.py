@@ -60,7 +60,7 @@ Path = list[GameTree]
 def scoreFromwinProp(winProp : WinsAndGames) -> float : # TODO need to seperate uncertainty from win rate
   # TODO use actual formula
   # can make more complicated with uncertainty from lower number of games
-  return winProp[1] / winProp[0]
+  return winProp[0] / winProp[1]
 
 def updateWinsAndGames(winProp : WinsAndGames, didWin : bool) -> WinsAndGames :
   return (winProp[0] + didWin, winProp[1] + 1)
@@ -96,33 +96,45 @@ def getMinMaxPath(tree : GameTree, isMaxFirst : bool, state : State) -> tuple[li
     if (tree.action) :
       state = applyActionToState(state, tree.action)
 
-    isMaxFirst = not isMaxFirst # may have mixed up negative
     next_i = getMinOrMaxFromChildren(tree.children, isMaxFirst)
     next = tree.children[next_i]
     path.append(next)
     tree = next
+    isMaxFirst = not isMaxFirst # may have mixed up negative
     
 
   return path, state
 
 
 
-testTree = GameTree(winProp=(0,0), children=[
+testTree = GameTree(winProp=(1,1), children=[
   GameTree(winProp=(2,1), children=[], action=None),
   GameTree(winProp=(3,1), children=[   GameTree(winProp=(1,1), children=[], action=None),   GameTree(winProp=(0,1), children=[], action=None)], action=None)
 ], action=None)
 
-assert(
-  
-  
-  list(map(lambda x : scoreFromwinProp(x.winProp) ,getMinMaxPath(
+
+
+def scoreFromTree(x : GameTree) :
+  return scoreFromwinProp(x.winProp)
+
+
+print(
+  list(map(scoreFromTree ,getMinMaxPath(
     testTree,
     True,
     START_STATE
-  ))) == [3.0, 0.0]
-
-
+  )[0]))
 )
+
+assert(
+  list(map(scoreFromTree ,getMinMaxPath(
+    testTree,
+    True,
+    START_STATE
+  )[0])) == [1.0, 3.0, 0.0]
+)
+
+
 
 # TODO
 
