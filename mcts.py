@@ -239,5 +239,5 @@ print(mcts())
 
 
 
-# TODO impliment depth logic
-# TODO add in formula 
+# TODO impliment depth logic, try not to add overhead
+# TODO add in formula for scoreFromwinProp
