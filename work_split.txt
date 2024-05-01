@@ -17,8 +17,9 @@ Overall plan
   H visualise MCTS to verify ✅
   H get MCTS working on simple single file game example ✅
   B transfer MCTS to more complex example to run program
-  B optimise performance
-  B write report
+  B get marks on gradescope
+  B optimise performance if needed
+  B + H write report
 
   
 Finish everything before May 8

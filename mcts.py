@@ -251,7 +251,7 @@ def UCB(Parent_n : GameTree, n : GameTree) :
   assert(n in Parent_n.children)
   return (U(n) / N(n)) + C * math.sqrt(math.log(N(Parent_n), 2) / N(n))
 
-def mcts(fromState : State = 0, iterations = 5000, player : Player = PLAYER1) -> Action :
+def mcts(player : Player, fromState : State, iterations = 5000) -> Action :
 
   gameTree = GameTree([], (0,0), None) # starting node
   for _ in range(iterations) :
@@ -270,7 +270,7 @@ def mcts(fromState : State = 0, iterations = 5000, player : Player = PLAYER1) ->
 # ================================================================================
 # call code
 
-print(mcts(iterations=ITERATIONS))
+print(mcts(fromState=START_STATE, iterations=ITERATIONS, player=PLAYER1))
 
 
 
