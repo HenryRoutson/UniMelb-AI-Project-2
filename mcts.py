@@ -66,7 +66,7 @@ def tieBreaker(state : State) -> Player :
 
 
 def getActionsFromState(state : State) -> list[Action] :
-  return [2, 1, -1, -2] # TODO test this and check win rate
+  return [2, 1, -1, -2] 
 
 def applyActionToState(state : State, action : Action) -> State :
   return state + action
@@ -280,6 +280,8 @@ def mcts(player : Player, fromState : State, iterations = 5000) -> Action :
 # ================================================================================
 # call code
 
+print()
+print("best move for player : ")
 print(mcts(fromState=START_STATE, iterations=ITERATIONS, player=PLAYER1))
 
 
