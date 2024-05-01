@@ -148,11 +148,10 @@ def rolloutStrategy(state : State, player: Player) :
 
 
 
-def rolloutSim(state : State, isMaxFirst: bool) -> Player :
+def rolloutSim(state : State, isMaxFirst: bool, depth) -> Player :
 
   # TODO while testing
   """
-  depth = 0 
   while depth != MAX_DEPTH :
 
     action = rolloutStrategy(state, isMaxFirst)
@@ -191,7 +190,7 @@ def makeMoveWith(initState : State, tree : GameTree, player: Player) -> GameTree
   state = applyActionToState(leafState, action) # TODO where does this action come from
 
   # 3.2 simluate rollout
-  whoWon = rolloutSim(state, isMaxFirst)
+  whoWon = rolloutSim(state, isMaxFirst, depth + 1)
   didWin = (whoWon == player)
 
   # 4 Back-propagation (update win and games values)
