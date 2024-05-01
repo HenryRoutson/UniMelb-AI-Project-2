@@ -3,7 +3,7 @@ MAX_DEPTH = 9
 START_STATE = 0
 
 DEBUG = True
-C = 0.1 # from Upper Confidence Bound formula
+C = 0.01 # from Upper Confidence Bound formula
 
 # These two numbers should increase together
 ITERATIONS = 75
