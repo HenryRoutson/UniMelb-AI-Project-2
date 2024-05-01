@@ -2,7 +2,7 @@
 MAX_DEPTH = 9
 START_STATE = 0
 
-DEBUG = True
+DEBUG = False
 C = 0.01 # from Upper Confidence Bound formula
 
 # These two numbers should increase together
@@ -268,6 +268,12 @@ def mcts(player : Player, fromState : State, iterations = 5000) -> Action :
   bestAction = nodes[1].action # 1 to ignore start node
   assert(bestAction)
   return bestAction
+
+
+
+
+
+
 
 
 
