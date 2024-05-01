@@ -199,6 +199,18 @@ def makeMoveWith(initState : State, tree : GameTree, player: Player) -> GameTree
 
   return tree
 
+import math
+
+def U(t : GameTree) -> float : return float(t.winProp[0])
+def N(t : GameTree) -> float : return float(t.winProp[1])
+
+def UCB(Parent_n : GameTree, n : GameTree) :
+  assert(n in Parent_n.children)
+
+  C = 1
+  return (U(n) / N(n)) + C * math.sqrt(math.log(N(Parent_n), 2) / N(n))
+  
+
 def isStateWin(state : State, isMax : bool) -> Optional[Player] :
   if isMax :
     if state > 5 : return PLAYER1
@@ -238,5 +250,4 @@ print(mcts())
 
 
 
-# TODO impliment depth logic, try not to add overhead
 # TODO add in formula for scoreFromwinProp
