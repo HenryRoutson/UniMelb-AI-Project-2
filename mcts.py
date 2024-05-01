@@ -1,10 +1,15 @@
 
 MAX_DEPTH = 9
 START_STATE = 0
-EXPLORE_MIN = 13
-DEBUG = False
+
+DEBUG = True
 C = 0.1 # from Upper Confidence Bound formula
-ITERATIONS = 1000
+
+# These two numbers should increase together
+ITERATIONS = 75
+EXPLORE_MIN = 13
+
+
 
 from typing import Optional
 import random
@@ -122,7 +127,6 @@ def getMinOrMaxFromChildren(parent : GameTree, isMax) -> int :
 
   # uncertainty
   e = list(enumerate(children))
-  random.shuffle(e)
   for i, c in e :
     if c.winProp[1] < EXPLORE_MIN :  # explore unexplored
       return i
