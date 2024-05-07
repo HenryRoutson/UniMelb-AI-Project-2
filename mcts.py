@@ -46,6 +46,8 @@ def heuristic(state : State, action : Action, player : Player) -> float :
   # used to pick which value to expand
   # this is much better than expanding randomly
 
+  # TODO in actual game implimentation, make this the number of columns and rows that the color is in
+
   if player == PLAYER1 :
     return action #* random.random()
   else :
