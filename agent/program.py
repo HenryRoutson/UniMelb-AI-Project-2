@@ -9,7 +9,7 @@ State = Board
 
 
 MAX_DEPTH = 9
-START_STATE = 0
+START_STATE = {} # empty board
 
 DEBUG = False
 C = 0.01 # from Upper Confidence Bound formula
@@ -287,7 +287,7 @@ def mcts(player : Player, fromState : State, iterations = 5000) -> Action :
 
 print()
 print("best move for player : ")
-print(mcts(fromState=START_STATE, iterations=ITERATIONS, player=PLAYER1))
+print(mcts(fromState=START_STATE, iterations=ITERATIONS, player=PlayerColor.BLUE))
 
 
 
