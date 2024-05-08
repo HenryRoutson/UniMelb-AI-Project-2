@@ -3,6 +3,7 @@
 
 from referee.game import PlayerColor, Action, PlaceAction, Coord
 from a1 import Board
+from collections import Counter
 
 State = Board
 
@@ -42,9 +43,7 @@ Negative if negative
 # config 
 
 
-Player = str
-PLAYER1 = "positive"
-PLAYER2 = "negative"
+Player = PlayerColor
 
 
 
@@ -59,17 +58,17 @@ def heuristic(state : State, action : Action, player : Player) -> float :
 
 
 def isStateWin(state : State) -> Optional[Player] :
-  if not state.keys().__contains__(PLAYER2) : return PLAYER1
-  if not state.keys().__contains__(PLAYER1) : return PLAYER2
+  if not state.values().__contains__(PlayerColor.RED) : return PlayerColor.BLUE
+  if not state.values().__contains__(PlayerColor.BLUE) : return PlayerColor.RED
   return None
   
-def tieBreaker(state : State) -> Player :
+def tieBreaker(state : State) -> Optional[Player] :
 
-  if state > 0 :
-    return PLAYER1
-  else :
-    return PLAYER2
+  counts = Counter(state.values())
 
+  if counts[PlayerColor.BLUE.value] > counts[PlayerColor.RED.value] : return PlayerColor.BLUE
+  if counts[PlayerColor.RED.value] > counts[PlayerColor.BLUE.value] : return PlayerColor.RED
+  return None
 
 def getActionsFromState(state : State) -> list[Action] :
   return [] # TODO
