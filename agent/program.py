@@ -72,7 +72,7 @@ def tieBreaker(state : State) -> Player :
 
 
 def getActionsFromState(state : State) -> list[Action] :
-  return [2, 1, -1, -2] 
+  return [] # TODO
 
 def applyActionToState(state : State, action : Action) -> State :
   return state # TODO
