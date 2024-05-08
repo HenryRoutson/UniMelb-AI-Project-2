@@ -29,7 +29,6 @@ Board = dict[Coord, PlayerColor]
 Target = NewType('Target', Coord)
 PlaceActionLst = list[PlaceAction]
 Heuristic = Callable[[Board, PlaceActionLst, Target], int]
-PLACE_COLOUR = PlayerColor.RED
 BOARD_SIZE = 11
 BOARD_ITER = range(BOARD_SIZE)
 MAX_PIECE_SIZE = 4

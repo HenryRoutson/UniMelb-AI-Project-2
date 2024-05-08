@@ -71,7 +71,7 @@ def tieBreaker(state : State) -> Optional[Player] :
   return None
 
 def getActionsFromState(state : State) -> list[Action] :
-  return [] # TODO
+  return 
 
 def applyActionToState(state : State, action : Action) -> State :
   return state # TODO
@@ -174,7 +174,7 @@ def getMinMaxPath(tree : GameTree, isMaxFirst : bool, state : State) -> tuple[li
 def scoreFromTree(x : GameTree) :
   return scoreFromwinProp(x.winProp)
 
-def rolloutSim(state : State, whosMove : Player, depth : int) -> Player :
+def rolloutSim(state : State, whosMove : Player, depth : int) -> Optional[Player] :
 
   while depth != MAX_DEPTH :
 
