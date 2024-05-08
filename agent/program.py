@@ -70,8 +70,16 @@ def tieBreaker(state : State) -> Optional[Player] :
   if counts[PlayerColor.RED.value] > counts[PlayerColor.BLUE.value] : return PlayerColor.RED
   return None
 
-def getActionsFromState(state : State) -> list[Action] :
-  return 
+def getActionsFromState(state : State, PlaceColour : PlayerColor) -> list[Action] :
+    
+  for coord in state.keys() :
+    if state[coord] == PlaceColour :
+      for n in coordPlaceOptions(BOARD, coord) :
+        neighbor : PlaceAction = n 
+
+  # TODO
+
+  return []
 
 def applyActionToState(state : State, action : Action) -> State :
   return state # TODO
