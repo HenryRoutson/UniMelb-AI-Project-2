@@ -2,7 +2,7 @@
 # Project Part B: Game Playing Agent
 
 from referee.game import PlayerColor, Action, PlaceAction, Coord
-from a1 import Board
+from a1 import Board, coordPlaceOptions
 from collections import Counter
 
 State = Board
@@ -71,21 +71,20 @@ def tieBreaker(state : State) -> Optional[Player] :
   return None
 
 def getActionsFromState(state : State, PlaceColour : PlayerColor) -> list[Action] :
+
+  actions = set()
     
   for coord in state.keys() :
     if state[coord] == PlaceColour :
-      for n in coordPlaceOptions(BOARD, coord) :
-        neighbor : PlaceAction = n 
+        actions.update(coordPlaceOptions(state, coord))
 
-  # TODO
-
-  return []
+  return list(actions)
 
 def applyActionToState(state : State, action : Action) -> State :
   return state # TODO
 
 def rolloutStrategy(state : State, player: Player) :
-  action = random.choice(getActionsFromState(state))
+  action = random.choice(getActionsFromState(state, player))
   return action
 
 
@@ -224,7 +223,7 @@ def makeMoveWith(initState : State, tree : GameTree, player: Player) -> GameTree
 
   # 2 Expansion (add a single node)
   leafNode = path[-1]
-  leafActions = getActionsFromState(leafState)
+  leafActions = getActionsFromState(leafState, player)
   for action in leafActions : 
     leafNode.children.append(GameTree([], (0, 0), action))
   
