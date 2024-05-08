@@ -1,0 +1,21 @@
+
+
+To ensure that our MCTS algorithm was correcly implimented, 
+we developed it in a game enironment with objectively good or bad actions.
+This environment was a simple game where the state and actions were integers where actions were added to the state.
+The goal of agent 1 was to get the highest number and agent 2 the lowest.
+
+Because picking the highest or lowest number is objectively the best action
+this allowed us to 
+  + verify our min max implimentation
+  + verify accuracy of our mcts
+
+For example
+
+  For actions [2,1,-1,2] :
+
+  A min max action sequence of [2,2,2,2,2] indicates that there is an error with the min max implimentation.
+
+  A min max action sequence of [1,-1,1,-1,1] indicates an ineffective mcts.
+
+  A min max action sequence of [2,-2,2,-2,2] indicates a proper and effective implimentation
