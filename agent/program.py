@@ -331,23 +331,8 @@ class Agent:
         # the agent is playing as BLUE or RED. Obviously this won't work beyond
         # the initial moves of the game, so you should use some game playing
         # technique(s) to determine the best action to take.
-        match self._color:
-            case PlayerColor.RED:
-                print("Testing: RED is playing a PLACE action")
-                return PlaceAction(
-                    Coord(3, 3), 
-                    Coord(3, 4), 
-                    Coord(4, 3), 
-                    Coord(4, 4)
-                )
-            case PlayerColor.BLUE:
-                print("Testing: BLUE is playing a PLACE action")
-                return PlaceAction(
-                    Coord(2, 3), 
-                    Coord(2, 4), 
-                    Coord(2, 5), 
-                    Coord(2, 6)
-                )
+        return mcts(self._color, {})
+
 
     def update(self, color: PlayerColor, action: Action, **referee: dict):
         """
