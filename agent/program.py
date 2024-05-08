@@ -193,8 +193,8 @@ def rolloutSim(state : State, whosMove : Player, depth : int) -> Player :
 
 
 def reversePlayer(player : Player) -> Player :
-  if player == PLAYER1 : return PLAYER2
-  if player == PLAYER2 : return PLAYER1
+  if player == PlayerColor.RED : return PlayerColor.BLUE
+  if player == PlayerColor.BLUE : return PlayerColor.RED
   assert(False)
 
 def whosMoveFromDepth(depth : int, playing : Player) -> Player :
