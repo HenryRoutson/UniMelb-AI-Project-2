@@ -217,16 +217,16 @@ def getCoordsOfColour(board : Board, colour : PlayerColor) -> list[Coord] :
   
   
 
-def a_star_len(BOARD : Board, coords_from : list[Coord], index : int, isColumn : bool) -> int :
-  tmp = a_star(BOARD, coords_from, index, isColumn)
+def a_star_len(BOARD : Board, coords_from : list[Coord], index : int, isColumn : bool, PlayerColor : PlayerColor) -> int :
+  tmp = a_star(BOARD, coords_from, index, isColumn, PlayerColor)
   if tmp == None : return -1
   else : return len(tmp)
 
 
-def minSquaresOfColorToIndexRowOrColumn(board : Board, target_index : int, isColumn) -> int :
+def minSquaresOfColorToIndexRowOrColumn(board : Board, target_index : int, isColumn, PlaceColour : PlayerColor) -> int :
   # manhattan distance
 
-  squares_of_place_colour : list[Coord] = getCoordsOfColour(board, PLACE_COLOUR)
+  squares_of_place_colour : list[Coord] = getCoordsOfColour(board, PlaceColour)
 
   # TODO config here to use a* or simple manhattan
   #return a_star_len(board, squares_of_place_colour, target_index, isColumn)
@@ -302,13 +302,13 @@ def squaresToCompleteLine(board : Board, index : int, isColumn : bool) -> int :
 """
 
 
-def minSquareCostForRowOrColumn(board : Board, target : Coord, isColumn : bool) -> int :
+def minSquareCostForRowOrColumn(board : Board, target : Coord, isColumn : bool, PlaceColour: PlayerColor) -> int :
   if isColumn : index = target.c
   else        : index = target.r
 
   empty_places_on_line = emptyPlacesCount(board, index, isColumn)
   
-  tmp = minSquaresOfColorToIndexRowOrColumn(board, index, isColumn)
+  tmp = minSquaresOfColorToIndexRowOrColumn(board, index, isColumn, PlaceColour)
   if (tmp == -1) : return -1
   squares_to_line = max(tmp - 1, 0) # -1 becuase if you have a square on the line that doesn't matter, it only needs to be next to the line
   min_num_squares = squares_to_line + empty_places_on_line
@@ -320,7 +320,7 @@ def numSquaresToPieces(i : int) :
   return  math.ceil(i / 4) # 
 
 
-def heuristic1(derived_board : Board, placeActionLst : PlaceActionLst, target : Target) -> Heuristic_value | None :
+def heuristic1(derived_board : Board, placeActionLst : PlaceActionLst, target : Target, PlaceColour: PlayerColor) -> Heuristic_value | None :
 
   ##################################################################################
 
@@ -331,8 +331,8 @@ def heuristic1(derived_board : Board, placeActionLst : PlaceActionLst, target : 
   # number of squares
 
   remaining_squares = min(
-    minSquareCostForRowOrColumn(derived_board, target, isColumn=False),
-    minSquareCostForRowOrColumn(derived_board, target, isColumn=True),
+    minSquareCostForRowOrColumn(derived_board, target, False, PlaceColour),
+    minSquareCostForRowOrColumn(derived_board, target, True, PlaceColour),
   )
 
   if (remaining_squares == -1) : return None
@@ -388,8 +388,8 @@ def overLap(place : PlaceAction ,coord : Coord) :
   return coord in place.coords
   
 
-def printBoardWithSquareAndPiece(coord : Coord, place : PlaceAction) :
-  print(render_board(deriveBoard({coord : PlayerColor.BLUE}, [place])[0], coord))
+def printBoardWithSquareAndPiece(coord : Coord, place : PlaceAction, PlaceColour : PlayerColor) :
+  print(render_board(deriveBoard({coord : PlayerColor.BLUE}, [place], PlaceColour)[0], coord))
 
 def coordPlaceOptions(board : Board, around : Coord) -> PlaceActionLst:
   # all place actions around the around coord
@@ -423,12 +423,12 @@ def coordPlaceOptions(board : Board, around : Coord) -> PlaceActionLst:
   
   
 
-def placeActionsFromBoard(board : Board) -> PlaceActionLst:
+def placeActionsFromBoard(board : Board, PlaceColour : PlayerColor) -> PlaceActionLst:
   # return a list of all pieces you can place connecting to a placeAction
 
   neighbors = set()
 
-  for coord in getCoordsOfColour(board, PLACE_COLOUR) :
+  for coord in getCoordsOfColour(board, PlaceColour) :
     for placeActionNeighbor in coordPlaceOptions(board, coord):
 
         #assert(adjacentTo(placeActionNeighbor, coord))
@@ -450,7 +450,7 @@ def qcopy(board : Board) -> Board :
 
   return newBoard
 
-def deriveBoard(original_board : Board, PlaceActionLst : PlaceActionLst) -> tuple[Board, bool] :
+def deriveBoard(original_board : Board, PlaceActionLst : PlaceActionLst, PlaceColour : PlayerColor) -> tuple[Board, bool] :
 
   board = copy.deepcopy(original_board)
   #board = qcopy(original_board)
@@ -462,7 +462,7 @@ def deriveBoard(original_board : Board, PlaceActionLst : PlaceActionLst) -> tupl
           board = boardEliminateFilledRowsOrColumns(board)[0] # unless elim
           #assert(not coord in board.keys())
 
-        board[coord] = PLACE_COLOUR
+        board[coord] = PlaceColour
 
   # TODO
   # return board
@@ -514,7 +514,7 @@ def pq_Type_get_PlaceActionLst(qp_type :pq_Type) -> list[PlaceAction] :
   ret : PlaceActionLst = wrapper.placeLst
   return ret
 
-def heuristic_search(BOARD : Board, TARGET : Target) ->  PlaceActionLst | None :
+def heuristic_search(BOARD : Board, TARGET : Target, PlaceColour : PlayerColor) ->  PlaceActionLst | None :
   """
   Adapted from https:#en.wikipedia.org/wiki/A*_search_algorithm
   BOARD and TARGET are contant
@@ -526,7 +526,7 @@ def heuristic_search(BOARD : Board, TARGET : Target) ->  PlaceActionLst | None :
      # this derived board includes an extra piece
 
     neighbor = placeActions[-1]
-    [derived_board_plus, didElimLine] =  deriveBoard(initial_derived_board, [neighbor]) # include neighbor
+    [derived_board_plus, didElimLine] =  deriveBoard(initial_derived_board, [neighbor], PlaceColour) # include neighbor
     
 
     """
@@ -541,7 +541,7 @@ def heuristic_search(BOARD : Board, TARGET : Target) ->  PlaceActionLst | None :
     # shouldn't already be in pq
     if not placeActions in (map(lambda x : x[1].placeLst,pq.queue)):
 
-      cost : Heuristic_value | None = heuristic1(derived_board_plus, placeActions, TARGET)
+      cost : Heuristic_value | None = heuristic1(derived_board_plus, placeActions, TARGET, PlaceColour)
       if (cost == None) : return False # can't reach
 
       to_put = (cost, PlaceActionListWrapper(placeActions))
@@ -563,7 +563,7 @@ def heuristic_search(BOARD : Board, TARGET : Target) ->  PlaceActionLst | None :
   # Add all neighbors of existing squares 
 
   for coord in BOARD.keys() :
-    if BOARD[coord] == PLACE_COLOUR :
+    if BOARD[coord] == PlaceColour :
       for n in coordPlaceOptions(BOARD, coord) :
         neighbor : PlaceAction = n
         #assert(adjacentTo(neighbor, coord))
@@ -585,12 +585,12 @@ def heuristic_search(BOARD : Board, TARGET : Target) ->  PlaceActionLst | None :
     #print("\ncurrent cost   : " + str(len(current)))
     #print("heuristic cost : " + str(current_with_heuristic[PQ_TYPE_HEURISTIC_VALUE_INDEX])) 
 
-    [derived_board, didElimLine] = deriveBoard(BOARD, current)
+    [derived_board, didElimLine] = deriveBoard(BOARD, current, PlaceColour)
 
     #print(render_board(derived_board, TARGET, ansi=True)) # remove for submission
 
 
-    for neighbor in placeActionsFromBoard(derived_board) :
+    for neighbor in placeActionsFromBoard(derived_board, PlaceColour) :
 
         next : PlaceActionLst = current + [neighbor]
         if addToPQ_returnTrueIfSolution(next, derived_board) :
@@ -617,8 +617,8 @@ def coordToPlaceAction(coord : Coord ) -> PlaceAction :
 def a_star_heuristic(coord_list : list[Coord], index : int, isColumn : bool) :
   return wrappingIndexDistance(getIndex(coord_list[-1], isColumn), index)
 
-def deriveBoardForAStar(board : Board, current : list[Coord]) :
-  return deriveBoard(board, [coordToPlaceAction(coord) for coord in current])
+def deriveBoardForAStar(board : Board, current : list[Coord], PlaceColour : PlayerColor) :
+  return deriveBoard(board, [coordToPlaceAction(coord) for coord in current], PlaceColour)
 
 
 def getIndex(coord : Coord, isColumn : bool) :
@@ -628,7 +628,7 @@ def getIndex(coord : Coord, isColumn : bool) :
 def coordListToHashable(list : list[Coord]) :
   return ' '.join([(str(x.r) + str(x.c)) for x in list])
 
-def a_star(BOARD : Board, coords_from : list[Coord], index : int, isColumn : bool) ->  list[Coord] | None :
+def a_star(BOARD : Board, coords_from : list[Coord], index : int, isColumn : bool, PlaceColour : PlayerColor) ->  list[Coord] | None :
   """
   Adapted from https:#en.wikipedia.org/wiki/A*_search_algorithm
   """
@@ -679,7 +679,7 @@ def a_star(BOARD : Board, coords_from : list[Coord], index : int, isColumn : boo
     #print("\ncurrent cost   : " + str(len(current)))
     #print("heuristic cost : " + str(current_with_heuristic[PQ_TYPE_HEURISTIC_VALUE_INDEX])) 
 
-    [derived_board, didElimLine] = deriveBoardForAStar(BOARD, current)
+    [derived_board, didElimLine] = deriveBoardForAStar(BOARD, current, PlaceColour)
     #print(render_board(derived_board, None, ansi=True)) # remove for submission
 
     lastPlaced : Coord = current[-1]
@@ -978,7 +978,7 @@ def printPlaceAction(place : PlaceAction) :
 
   print("  ),")
 
-def allPlaceOptionsForPiecesAroundCenter(pieces : PlaceActionLst) -> PlaceActionLst :
+def allPlaceOptionsForPiecesAroundCenter(pieces : PlaceActionLst, PlaceColour : PlayerColor) -> PlaceActionLst :
   print("COMPILE TIME CODE")
 
   BOARD_WITH_CENTER = { CENTER : PlayerColor.BLUE } # visuliase the center
@@ -1010,7 +1010,7 @@ def allPlaceOptionsForPiecesAroundCenter(pieces : PlaceActionLst) -> PlaceAction
 
                 print("GENERATING FOUND")
                 print("new_piece " + str(new_piece))
-                print(render_board(deriveBoard(BOARD_WITH_CENTER, [new_piece])[0]))
+                print(render_board(deriveBoard(BOARD_WITH_CENTER, [new_piece], PlaceColour)[0]))
               
               else : # generating
 
