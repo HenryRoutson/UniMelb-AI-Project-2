@@ -2,9 +2,9 @@
 # Project Part B: Game Playing Agent
 
 from referee.game import PlayerColor, Action, PlaceAction, Coord
+from a1 import Board
 
-
-State = int
+State = Board
 
 
 MAX_DEPTH = 9
@@ -59,8 +59,8 @@ def heuristic(state : State, action : Action, player : Player) -> float :
 
 
 def isStateWin(state : State) -> Optional[Player] :
-  if state > 5 : return PLAYER1
-  if state < -5 : return PLAYER2
+  if not state.keys().__contains__(PLAYER2) : return PLAYER1
+  if not state.keys().__contains__(PLAYER1) : return PLAYER2
   return None
   
 def tieBreaker(state : State) -> Player :
