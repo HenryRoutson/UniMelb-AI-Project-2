@@ -4,6 +4,7 @@
 from referee.game import PlayerColor, Action, PlaceAction, Coord
 
 
+State = int
 
 
 MAX_DEPTH = 9
@@ -46,8 +47,7 @@ PLAYER1 = "positive"
 PLAYER2 = "negative"
 
 
-State = int
-Action = int
+
 
 def heuristic(state : State, action : Action, player : Player) -> float :
   # used to pick which value to expand
@@ -55,10 +55,7 @@ def heuristic(state : State, action : Action, player : Player) -> float :
 
   # TODO in actual game implimentation, make this the number of columns and rows that the color is in
 
-  if player == PLAYER1 :
-    return action #* random.random()
-  else :
-    return -action
+  return 0
 
 
 def isStateWin(state : State) -> Optional[Player] :
@@ -78,7 +75,7 @@ def getActionsFromState(state : State) -> list[Action] :
   return [2, 1, -1, -2] 
 
 def applyActionToState(state : State, action : Action) -> State :
-  return state + action
+  return state # TODO
 
 def rolloutStrategy(state : State, player: Player) :
   action = random.choice(getActionsFromState(state))
