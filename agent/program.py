@@ -2067,7 +2067,14 @@ def getActionsFromState(state : State, PlaceColour : PlayerColor, isFirstMove : 
 
       assert(len(actions) != 0)
 
+      for a in actions :
+    
+        # make sure actions are next to a colour
+        assert(any(adjacentTo(a, coord) for coord in  getCoordsOfColour(state, PlaceColour)))
+        pass
+
       return list(actions)
+
 
 
 
