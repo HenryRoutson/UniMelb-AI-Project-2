@@ -2116,7 +2116,7 @@ State = Board
 MAX_DEPTH = 9
 START_STATE = {} # empty board
 
-DEBUG = False
+DEBUG = True
 C = 0.01 # from Upper Confidence Bound formula
 
 # These two numbers should increase together
@@ -2205,7 +2205,7 @@ def applyActionToState(state : State, action : Action) -> State :
   return state # TODO
 
 def rolloutStrategy(state : State, player: Player) :
-  action = random.choice(getActionsFromState(state, player))
+  action = random.choice(getActionsFromState(state, player, False))
   return action
 
 
@@ -2340,11 +2340,12 @@ def makeMoveWith(initState : State, tree : GameTree, playerNotWhosMove: Player) 
   # 1 Selection (min max)
   path, leafState = getMinMaxPath(tree, isMaxFirst, initState)
   depth = len(path)
+  isFirstMove = (depth == 1)
   whosMoveNotPlayer = whosMoveFromDepth(depth=depth, playing=playerNotWhosMove)
 
   # 2 Expansion (add a single node)
   leafNode = path[-1]
-  leafActions = getActionsFromState(leafState, whosMoveNotPlayer)
+  leafActions = getActionsFromState(leafState, whosMoveNotPlayer, isFirstMove)
   for action in leafActions : 
     leafNode.children.append(GameTree([], (0, 0), action))
   
