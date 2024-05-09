@@ -1,11 +1,7 @@
 
 
-
-why is tree getting no extra nodes 
-
-Tree
-action : None, winprop :(0, 74)fract.0, state : {}num children : 0
-
+* referee : RED plays action PLACE(0-1, 1-0, 1-2, 1-1)
+* referee ! player error: ILLEGAL ACTION: Unknown action PLACE(0-1, 1-0, 1-2, 1-1)
 
 
 
