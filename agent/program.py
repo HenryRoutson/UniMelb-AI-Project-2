@@ -89,6 +89,7 @@ class PlayerColor(Enum):
         }[self]
 
 
+
 @dataclass(frozen=True, slots=True)
 class Vector2:
     """
@@ -2171,8 +2172,8 @@ def tieBreaker(state : State) -> Optional[Player] :
 
   counts = Counter(state.values())
 
-  if counts[PlayerColor.BLUE.value] > counts[PlayerColor.RED.value] : return PlayerColor.BLUE
-  if counts[PlayerColor.RED.value] > counts[PlayerColor.BLUE.value] : return PlayerColor.RED
+  if counts[PlayerColor.BLUE] > counts[PlayerColor.RED] : return PlayerColor.BLUE
+  if counts[PlayerColor.RED] > counts[PlayerColor.BLUE] : return PlayerColor.RED
   return None
 
 
@@ -2339,6 +2340,10 @@ def rolloutSim(state : State, whosMove : Player, depth : int) -> Optional[Player
 def reversePlayer(player : Player) -> Player :
   if player == PlayerColor.RED : return PlayerColor.BLUE
   if player == PlayerColor.BLUE : return PlayerColor.RED
+  print("here")
+  print(player)
+  print(player == PlayerColor.RED)
+  raise Exception("error")
   assert(False)
 
 def whosMoveFromDepth(depth : int, playing : Player) -> Player :
@@ -2477,7 +2482,15 @@ class Agent:
         # the agent is playing as BLUE or RED. Obviously this won't work beyond
         # the initial moves of the game, so you should use some game playing
         # technique(s) to determine the best action to take.
-        return mcts(self._color, {})
+
+
+        # bruh
+        def PlayerColorFromString(s) -> PlayerColor :
+          if str(s) == "RED" : return PlayerColor.RED
+          if str(s) == "BLUE" : return PlayerColor.BLUE
+
+        color : PlayerColor = PlayerColorFromString(self._color) 
+        return mcts(color, {})
 
 
     def update(self, color: PlayerColor, action: Action, **referee: dict):
