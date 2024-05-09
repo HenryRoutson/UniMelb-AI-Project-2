@@ -2443,15 +2443,6 @@ def mcts(player : Player, fromState : State, iterations = 5000) -> Action :
 # ================================================================================
 # call code
 
-print()
-print("best move for player : ")
-print(mcts(fromState=START_STATE, iterations=ITERATIONS, player=PlayerColor.BLUE))
-
-
-
-
-
-
 
 
 class Agent:
@@ -2488,6 +2479,7 @@ class Agent:
         def PlayerColorFromString(s) -> PlayerColor :
           if str(s) == "RED" : return PlayerColor.RED
           if str(s) == "BLUE" : return PlayerColor.BLUE
+          assert(False)
 
         color : PlayerColor = PlayerColorFromString(self._color) 
         return mcts(color, {})
