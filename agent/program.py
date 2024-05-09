@@ -2233,12 +2233,13 @@ class GameTree : # / node
 
 def printTree(tree : GameTree, state : Optional[State], toIndent = 100, indent = 0) :
   if indent > toIndent : return
-  print("    "*indent + "action : " + str(tree.action) + ", winprop :" + str(tree.winProp) + "fract" + str(tree.winProp[0] / (tree.winProp[1] + 0.01))[1:4] + ", state : " + str(state)) # TODO add state
+  print("    "*indent + "action : " + str(tree.action) + ", winprop :" + str(tree.winProp) + "fract" + str(tree.winProp[0] / (tree.winProp[1] + 0.01))[1:4] + ", state : " + str(state) + " num children : " + str(len(tree.children))) # TODO add state
   for t in tree.children :
     tmpState = state
     if state != None and t.action :
       tmpState = applyActionToState(state, t.action)
     printTree(t, tmpState, indent=(indent + 1), toIndent=toIndent)
+  print()
 
 Children = list[GameTree]
 Path = list[GameTree]
