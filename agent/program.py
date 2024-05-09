@@ -2116,7 +2116,7 @@ State = Board
 MAX_DEPTH = 9
 START_STATE = {} # empty board
 
-DEBUG = True
+DEBUG = False
 C = 0.01 # from Upper Confidence Bound formula
 
 # These two numbers should increase together
@@ -2163,8 +2163,8 @@ def heuristic(state : State, action : Action, player : Player) -> float :
 
 
 def isStateWin(state : State) -> Optional[Player] :
-  if not state.values().__contains__(PlayerColor.RED) : return PlayerColor.BLUE
-  if not state.values().__contains__(PlayerColor.BLUE) : return PlayerColor.RED
+  if not PlayerColor.RED in state.values() : return PlayerColor.BLUE
+  if not PlayerColor.BLUE in state.values() : return PlayerColor.RED
   return None
   
 def tieBreaker(state : State) -> Optional[Player] :
@@ -2215,8 +2215,12 @@ def getActionsFromState(state : State, PlaceColour : PlayerColor, isFirstMove : 
 def applyActionToState(state : State, action : Action) -> State :
   return state # TODO
 
-def rolloutStrategy(state : State, player: Player) :
-  action = random.choice(getActionsFromState(state, player, False))
+def rolloutStrategy(state : State, player: Player) -> Optional[Action] :
+  possibleActions = getActionsFromState(state, player, False)
+  if possibleActions == [] :
+     return None
+
+  action = random.choice(possibleActions) # radom rollout deals with running out of space
   return action
 
 
