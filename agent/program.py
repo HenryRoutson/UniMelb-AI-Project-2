@@ -76,23 +76,6 @@ from typing import Generator
 BOARD_N = 11
 
 
-class PlayerColor(Enum):
-    """
-    An `enum` capturing the two player colours.
-    """
-    RED = 0
-    BLUE = 1
-
-    def __str__(self) -> str:
-        """
-        String representation of a player colour identifier.
-        """
-        return {
-            PlayerColor.RED: "RED",
-            PlayerColor.BLUE: "BLUE"
-        }[self]
-
-
 
 @dataclass(frozen=True, slots=True)
 class Vector2:
@@ -179,59 +162,6 @@ class Direction(Enum):
                 return self.value.c
             case _:
                 return super().__getattribute__(__name)
-
-
-@dataclass(order=True, frozen=True)
-class Coord(Vector2):
-    """
-    A specialisation of the `Vector2` class, representing a coordinate on the
-    game board. This class also enforces that the coordinates are within the
-    bounds of the game board, or in the case of addition/subtraction, using
-    modulo arithmetic to "wrap" the coordinates at the edges of the board.
-    """
-
-    def __post_init__(self):
-        if not (0 <= self.r < BOARD_N) or not (0 <= self.c < BOARD_N):
-            raise ValueError(f"Out-of-bounds coordinate: {self}")
-
-    def __str__(self):
-        return f"{self.r}-{self.c}"
-
-    def __add__(self, other: 'Direction|Vector2') -> 'Coord':
-        return self.__class__(
-            (self.r + other.r) % BOARD_N, 
-            (self.c + other.c) % BOARD_N,
-        )
-
-    def __sub__(self, other: 'Direction|Vector2') -> 'Coord':
-        return self.__class__(
-            (self.r - other.r) % BOARD_N, 
-            (self.c - other.c) % BOARD_N
-        )
-
-@dataclass(frozen=True, slots=True)
-class PlaceAction():
-    """
-    A dataclass representing a "place action", where four board coordinates
-    denote the placement of a tetromino piece.
-    """
-    c1: Coord
-    c2: Coord
-    c3: Coord
-    c4: Coord
-
-    @property
-    def coords(self) -> set[Coord]:
-        try:
-            return set([self.c1, self.c2, self.c3, self.c4])
-        except:
-            raise AttributeError("Invalid coords")
-
-    def __str__(self) -> str:
-        try:
-            return f"PLACE({self.c1}, {self.c2}, {self.c3}, {self.c4})"
-        except:
-            return f"PLACE(<invalid coords>)"
 
 
 
