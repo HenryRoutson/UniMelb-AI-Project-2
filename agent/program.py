@@ -2055,7 +2055,7 @@ DEBUG = True
 C = 0.01 # from Upper Confidence Bound formula
 
 # These two numbers should increase together
-ITERATIONS = 75
+ITERATIONS = 1
 EXPLORE_MIN = 13
 
 
@@ -2350,6 +2350,8 @@ def UCB(Parent_n : GameTree, n : GameTree) :
 
 def mcts(player : Player, fromState : State, iterations = 5000) -> Action :
 
+  if DEBUG : print("MCTS CALLED ,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,")
+
   gameTree = GameTree([], (0,0), None) # starting node
   for _ in range(iterations) :
     gameTree = makeMoveWith(fromState, gameTree, player)
@@ -2419,7 +2421,7 @@ class Agent:
         # technique(s) to determine the best action to take.
 
 
-        action = mcts(self._color, self.board_state) # TODO
+        action = mcts(self._color, self.board_state, iterations=ITERATIONS) # TODO
         gc.collect() # reduce memory usage
         return action
 
