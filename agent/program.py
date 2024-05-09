@@ -2186,7 +2186,7 @@ def printTree(tree : GameTree, state : Optional[State], toIndent = 100, indent =
   #print(", state : " + str(state), end ="")
   print(" num children : " + str(len(tree.children)), end ="\n")
 
-  for t in tree.children :
+  for t in tree.children[:5] :
     tmpState = state
     if state != None and t.action :
       tmpState = applyActionToState(state, t.action)
