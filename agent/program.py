@@ -2051,7 +2051,7 @@ State = Board
 MAX_DEPTH = 9
 START_STATE = {} # empty board
 
-DEBUG = False
+DEBUG = True
 C = 0.01 # from Upper Confidence Bound formula
 
 # These two numbers should increase together
@@ -2179,7 +2179,13 @@ class GameTree : # / node
 
 def printTree(tree : GameTree, state : Optional[State], toIndent = 100, indent = 0) :
   if indent > toIndent : return
-  print("    "*indent + "action : " + str(tree.action) + ", winprop :" + str(tree.winProp) + "fract" + str(tree.winProp[0] / (tree.winProp[1] + 0.01))[1:4] + ", state : " + str(state) + " num children : " + str(len(tree.children))) # TODO add state
+  print("    "*indent, end ="")
+  #print("action : " + str(tree.action), end ="")
+  print(", winprop :" + str(tree.winProp), end ="")
+  print("fract" + str(tree.winProp[0] / (tree.winProp[1] + 0.01))[1:4], end ="")
+  #print(", state : " + str(state), end ="")
+  print(" num children : " + str(len(tree.children)), end ="\n")
+
   for t in tree.children :
     tmpState = state
     if state != None and t.action :
@@ -2254,6 +2260,9 @@ def rolloutSim(state : State, whosMove : Player, depth : int) -> Optional[Player
   while depth != MAX_DEPTH :
 
     action = rolloutStrategy(state, whosMove)
+    if action == None :
+       return reversePlayer(whosMove)
+
     state = applyActionToState(state, action)
     maybeSomeoneWon = isStateWin(state)
 
@@ -2357,7 +2366,7 @@ def mcts(player : Player, fromState : State, isFirstMove : bool, iterations = 50
     gameTree = makeMoveWith(fromState, gameTree, player, isFirstMove)
     if DEBUG :
       print("Tree")
-      printTree(gameTree, fromState, toIndent=3)
+      printTree(gameTree, fromState, toIndent=2)
 
   nodes, endState = getMinMaxPath(gameTree, True, fromState)
   bestAction = nodes[1].action # 1 to ignore start node
