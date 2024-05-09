@@ -2177,21 +2177,26 @@ def tieBreaker(state : State) -> Optional[Player] :
 
 
 
-
-
+# TODO create iterator for memory maybe
+allCoords = []
+for x in range(BOARD_N) :
+   for y in range(BOARD_N) :
+      allCoords.append(Coord(x,y))
 
 def getActionsFromState(state : State, PlaceColour : PlayerColor, isFirstMove : bool) -> list[Action] :
 
   actions = set()
 
   def coordIsPlaceColour(coord : Coord) -> bool :
+      return state[coord] == PlaceColour
      
-     if not isFirstMove :
-        return state[coord] == PlaceColour
-     else :
-        return True
+  if not isFirstMove :
+    coordsList = list(filter(coordIsPlaceColour, state.keys()))
+  else :
+     assert(len(state.keys()) == 0)
+     coordsList = allCoords
 
-  for coord in filter(coordIsPlaceColour, state.keys()) :
+  for coord in coordsList:
         actions.update(coordPlaceOptions(state, coord))
 
         # there are a million options for the first move 
