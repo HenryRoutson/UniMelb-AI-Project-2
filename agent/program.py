@@ -235,75 +235,6 @@ def squaresToPieces(numSquares : int) -> int :
   return math.ceil(numSquares / MAX_PIECE_SIZE) # if remainder, you still need another piece
 
 
-# impl
-
-def search(
-    board: Board, 
-    target: Coord
-) -> PlaceActionLst | None:
-    """
-    This is the entry point for your submission. You should modify this
-    function to solve the search problem discussed in the Part A specification.
-    See `core.py` for information on the types being used here.
-
-    Parameters:
-        `board`: a dictionary representing the initial board state, mapping
-            coordinates to "player colours". The keys are `Coord` instances,
-            and the values are `PlayerColor` instances.  
-        `target`: the target BLUE coordinate to remove from the board.
-    
-    Returns:
-        A list of "place actions" as PlaceAction instances, or `None` if no
-        solution is possible.
-    """
-
-
-    # For testing A* -------------------------------------------------
-
-    #print(a_star({}, [Coord(5,5)], 1, True))
-    #print(a_star({}, [Coord(5,5)], 1, False))
-
-    #print(a_star({}, [Coord(8,8)], 0, True))
-    #print(a_star({}, [Coord(8,8)], 0, False))
-
-
-    #print(a_star({Coord(2,3) : PlayerColor.BLUE, Coord(1,3) : PlayerColor.BLUE}, [Coord(2,2)], 5, True))
-
-    """
-    for row in BOARD_ITER :
-      for col in BOARD_ITER :
-        for index in BOARD_ITER :
-          for b in [True, False] :
-            #print("=====================================")
-            #print("=====================================")
-            #print(target, index, b)
-            (a_star(board, [Coord(row, col)], index, b))
-            #print("=====================================")
-            #print("=====================================")
-    print("DONE")
-    """
-
-
-
-
-    # For generating PIECES_FOR_GENERATING -------------------------------------------------
-    # printMatrix(matrix)
-
-    # For generating GENERATED_PIECE_PLACEMENTS -------------------------------------------------
-      
-    #allPlaceOptionsForPiecesAroundCenter(PIECES_FOR_GENERATING)
-
-    # For actual search -------------------------------------------------
-    return heuristic_search(board, target) # type: ignore
-
-    """
-    with cProfile.Profile() as pr:
-        # ... do something ...
-        heuristic_search(board, target)
-
-        pr.print_stats(sort='cumulative')
-    """
-
 
 
 
@@ -620,9 +551,7 @@ def placeActionsFromBoard(board : Board, PlaceColour : PlayerColor) -> PlaceActi
 
   for coord in getCoordsOfColour(board, PlaceColour) :
     for placeActionNeighbor in coordPlaceOptions(board, coord):
-
-        #assert(adjacentTo(placeActionNeighbor, coord))
-        neighbors.add(placeActionNeighbor)
+      neighbors.add(placeActionNeighbor)
 
   ret : PlaceActionLst = list(neighbors)
   return ret
@@ -2357,9 +2286,6 @@ def UCB(Parent_n : GameTree, n : GameTree) :
   return (U(n) / N(n)) + C * math.sqrt(math.log(N(Parent_n), 2) / N(n))
 
 def mcts(player : Player, fromState : State, isFirstMove : bool, iterations = 5000) -> Action :
-
-  if DEBUG : print("MCTS CALLED ,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,")
-  print("is first" + str(isFirstMove))
 
   gameTree = GameTree([], (0,0), None) # starting node
   for _ in range(iterations) :
