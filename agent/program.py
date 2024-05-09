@@ -2428,6 +2428,7 @@ def mcts(player : Player, fromState : State, iterations = 5000) -> Action :
       printTree(gameTree, fromState, toIndent=3)
 
   nodes, endState = getMinMaxPath(gameTree, True, fromState)
+  del gameTree
   bestAction = nodes[1].action # 1 to ignore start node
   assert(bestAction)
   return bestAction
@@ -2456,12 +2457,22 @@ class Agent:
         This constructor method runs when the referee instantiates the agent.
         Any setup and/or precomputation should be done here.
         """
-        self._color = color
-        match color:
-            case PlayerColor.RED:
-                print("Testing: I am playing as RED")
-            case PlayerColor.BLUE:
-                print("Testing: I am playing as BLUE")
+
+        # bruh
+        def PlayerColorFromString(s) -> PlayerColor :
+          if str(s) == "RED" : return PlayerColor.RED
+          if str(s) == "BLUE" : return PlayerColor.BLUE
+          assert(False)
+
+        self._color : PlayerColor = PlayerColorFromString(color) 
+        if color == PlayerColor.RED:
+            print("Testing: I am playing as RED")
+        if color == PlayerColor.BLUE:
+            print("Testing: I am playing as BLUE")
+        else :
+           print("error on colour match") # TODO
+              
+
 
     def action(self, **referee: dict) -> Action:
         """
@@ -2475,14 +2486,8 @@ class Agent:
         # technique(s) to determine the best action to take.
 
 
-        # bruh
-        def PlayerColorFromString(s) -> PlayerColor :
-          if str(s) == "RED" : return PlayerColor.RED
-          if str(s) == "BLUE" : return PlayerColor.BLUE
-          assert(False)
 
-        color : PlayerColor = PlayerColorFromString(self._color) 
-        return mcts(color, {})
+        return mcts(self._color, {})
 
 
     def update(self, color: PlayerColor, action: Action, **referee: dict):
