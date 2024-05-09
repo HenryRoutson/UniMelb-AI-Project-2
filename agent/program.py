@@ -2175,13 +2175,29 @@ def tieBreaker(state : State) -> Optional[Player] :
   if counts[PlayerColor.RED.value] > counts[PlayerColor.BLUE.value] : return PlayerColor.RED
   return None
 
-def getActionsFromState(state : State, PlaceColour : PlayerColor) -> list[Action] :
+
+
+
+
+
+def getActionsFromState(state : State, PlaceColour : PlayerColor, isFirstMove : bool) -> list[Action] :
 
   actions = set()
-    
-  for coord in state.keys() :
-    if state[coord] == PlaceColour :
+
+  def coordIsPlaceColour(coord : Coord) -> bool :
+     
+     if not isFirstMove :
+        return state[coord] == PlaceColour
+     else :
+        return True
+
+  for coord in filter(coordIsPlaceColour, state.keys()) :
         actions.update(coordPlaceOptions(state, coord))
+
+        # there are a million options for the first move 
+        # and you don't want to waste memory
+        if isFirstMove and len(actions) != 0 :
+            break
 
   return list(actions)
 
