@@ -2,11 +2,11 @@
 MAX_DEPTH = 9
 START_STATE = 0
 
-DEBUG = False
+DEBUG = True
 C = 0.01 # from Upper Confidence Bound formula
 
 # These two numbers should increase together
-ITERATIONS = 75
+ITERATIONS = 100
 EXPLORE_MIN = 13
 
 
@@ -67,14 +67,14 @@ def tieBreaker(state : State) -> Player :
     return PLAYER2
 
 
-def getActionsFromState(state : State) -> list[Action] :
+def getActionsFromState(state : State, player : Player) -> list[Action] :
   return [2, 1, -1, -2] 
 
 def applyActionToState(state : State, action : Action) -> State :
   return state + action
 
 def rolloutStrategy(state : State, player: Player) :
-  action = random.choice(getActionsFromState(state))
+  action = random.choice(getActionsFromState(state, player))
   return action
 
 
@@ -203,23 +203,23 @@ def whosMoveFromDepth(depth : int, playing : Player) -> Player :
   else : 
     return reversePlayer(playing)
 
-def makeMoveWith(initState : State, tree : GameTree, player: Player) -> GameTree :
+def makeMoveWith(initState : State, tree : GameTree, playerNotWhosMove: Player) -> GameTree :
   isMaxFirst = True
 
   # 1 Selection (min max)
   path, leafState = getMinMaxPath(tree, isMaxFirst, initState)
   depth = len(path)
-  whosMove = whosMoveFromDepth(depth=depth, playing=player)
+  whosMoveNotPlayer = whosMoveFromDepth(depth=depth, playing=playerNotWhosMove)
 
   # 2 Expansion (add a single node)
   leafNode = path[-1]
-  leafActions = getActionsFromState(leafState)
+  leafActions = getActionsFromState(leafState, whosMoveNotPlayer)
   for action in leafActions : 
     leafNode.children.append(GameTree([], (0, 0), action))
   
   def heuristicFromChild(child : GameTree) :
     assert(child.action)
-    return heuristic(state=leafState, action=child.action, player=whosMove)
+    return heuristic(state=leafState, action=child.action, player=whosMoveNotPlayer)
 
   leafNode.children.sort(key=heuristicFromChild, reverse=True)
 
@@ -228,22 +228,30 @@ def makeMoveWith(initState : State, tree : GameTree, player: Player) -> GameTree
     for t in leafNode.children: print(t.action)
     print()
 
-  path.append(leafNode.children[0])
+  didWin = None
+  if leafNode.children != [] :
+     # there are no moves from this state
 
-  # 3 Simulation (rollout)
+    path.append(leafNode.children[0])
 
+    # 3 Simulation (rollout)
 
-  # 3.1 derive state
-  action = path[-1].action
-  assert(action)
-  state = applyActionToState(leafState, action) 
+    # 3.1 derive state
+    action = path[-1].action
+    assert(action)
+    state = applyActionToState(leafState, action) 
 
-  # 3.2 simluate rollout
-  whoWon = rolloutSim(state, whosMove, depth=depth)
-  didWin = (whoWon == player)
+    # 3.2 simluate rollout
+    whoWon = rolloutSim(state, whosMoveNotPlayer, depth=depth)
+    didWin = (whoWon == playerNotWhosMove)
+  
+  else :
+    # other player won
+    didWin = reversePlayer(whosMoveNotPlayer) == playerNotWhosMove
 
   # 4 Back-propagation (update win and games values)
   for curNode in path :
+    assert(didWin != None)
     curNode.winProp = updateWinsAndGames(curNode.winProp, didWin)
 
   return tree
