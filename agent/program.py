@@ -2047,19 +2047,14 @@ for x in range(BOARD_N) :
    for y in range(BOARD_N) :
       allCoords.append(Coord(x,y))
 
+
 def getActionsFromState(state : State, PlaceColour : PlayerColor, isFirstMove : bool) -> list[Action] :
 
 
   if not isFirstMove : 
     actions = placeActionsFromBoard(state, PlaceColour)
-
-    for a in actions :
   
-      # make sure actions are next to a colour
-      assert(any(adjacentTo(a, coord) for coord in  getCoordsOfColour(state, PlaceColour)))
-      pass
 
-  
     return actions
 
   else :
@@ -2082,8 +2077,8 @@ def getActionsFromState(state : State, PlaceColour : PlayerColor, isFirstMove : 
 
 
 
-def applyActionToState(state : State, action : Action) -> State :
-  return state # TODO
+def applyActionToState(state : State, action : Action, PlaceColour : PlayerColor) -> State :
+  return deriveBoard(state, [action], PlaceColour)[0]
 
 def rolloutStrategy(state : State, player: Player) -> Optional[Action] :
   possibleActions = getActionsFromState(state, player, False)
@@ -2116,7 +2111,11 @@ class GameTree : # / node
     # state is derived, as it takes too much space
 
 
-def printTree(tree : GameTree, state : Optional[State], toIndent = 100, indent = 0) :
+def printTree(tree : GameTree, state : Optional[State], playing : PlayerColor, toIndent = 100, indent = 0) :
+
+  depth = indent + 1
+
+
   if indent > toIndent : return
   print("    "*indent, end ="")
   #print("action : " + str(tree.action), end ="")
@@ -2128,8 +2127,8 @@ def printTree(tree : GameTree, state : Optional[State], toIndent = 100, indent =
   for t in tree.children[:5] :
     tmpState = state
     if state != None and t.action :
-      tmpState = applyActionToState(state, t.action)
-    printTree(t, tmpState, indent=(indent + 1), toIndent=toIndent)
+      tmpState = applyActionToState(state, t.action, whosMoveFromDepth(depth=depth, playing=playing))
+    printTree(t, state=tmpState, playing=playing, indent=(indent + 1), toIndent=toIndent)
   print()
 
 Children = list[GameTree]
@@ -2167,20 +2166,23 @@ def getMinOrMaxFromChildren(parent : GameTree, isMax) -> int :
   max_index = scores.index(getValue)
   return max_index
 
-def getMinMaxPath(tree : GameTree, isMaxFirst : bool, state : State) -> tuple[list[GameTree], State] :
+def getMinMaxPath(tree : GameTree, isMaxFirst : bool, state : State, playing : PlayerColor) -> tuple[list[GameTree], State] :
   
+
+  whosMove = playing
 
   path : list[GameTree] = [tree] # path indexes 
   while tree.children != [] :
 
     if (tree.action) :
-      state = applyActionToState(state, tree.action)
+      state = applyActionToState(state, tree.action, whosMove)
 
     next_i = getMinOrMaxFromChildren(tree, isMaxFirst)
     next = tree.children[next_i]
     path.append(next)
     tree = next
     isMaxFirst = not isMaxFirst 
+    whosMove = reversePlayer(playing)
 
   if DEBUG :
     print("Path")
@@ -2202,7 +2204,7 @@ def rolloutSim(state : State, whosMove : Player, depth : int) -> Optional[Player
     if action == None :
        return reversePlayer(whosMove)
 
-    state = applyActionToState(state, action)
+    state = applyActionToState(state, action, whosMove)
     maybeSomeoneWon = isStateWin(state)
 
     if maybeSomeoneWon != None : 
@@ -2237,7 +2239,7 @@ def makeMoveWith(initState : State, tree : GameTree, playerNotWhosMove: Player, 
   isMaxFirst = True
 
   # 1 Selection (min max)
-  path, leafState = getMinMaxPath(tree, isMaxFirst, initState)
+  path, leafState = getMinMaxPath(tree, isMaxFirst, initState, playerNotWhosMove)
   depth = len(path)
   whosMoveNotPlayer = whosMoveFromDepth(depth=depth, playing=playerNotWhosMove)
 
@@ -2269,7 +2271,7 @@ def makeMoveWith(initState : State, tree : GameTree, playerNotWhosMove: Player, 
     # 3.1 derive state
     action = path[-1].action
     assert(action)
-    state = applyActionToState(leafState, action) 
+    state = applyActionToState(leafState, action, PlaceColour=whosMoveNotPlayer) 
 
     # 3.2 simluate rollout
     whoWon = rolloutSim(state, whosMoveNotPlayer, depth=depth)
@@ -2302,9 +2304,9 @@ def mcts(player : Player, fromState : State, isFirstMove : bool, iterations = 50
     gameTree = makeMoveWith(fromState, gameTree, player, isFirstMove)
     if DEBUG :
       print("Tree")
-      printTree(gameTree, fromState, toIndent=2)
+      printTree(gameTree, fromState, toIndent=2, playing=player)
 
-  nodes, endState = getMinMaxPath(gameTree, True, fromState)
+  nodes, endState = getMinMaxPath(gameTree, True, fromState, player)
   bestAction = nodes[1].action # 1 to ignore start node
   assert(bestAction)
   return bestAction
