@@ -56,6 +56,10 @@ import math
 import copy
 import cProfile
 import time
+import gc
+
+
+
 
 
 from enum import Enum
@@ -2428,7 +2432,6 @@ def mcts(player : Player, fromState : State, iterations = 5000) -> Action :
       printTree(gameTree, fromState, toIndent=3)
 
   nodes, endState = getMinMaxPath(gameTree, True, fromState)
-  del gameTree
   bestAction = nodes[1].action # 1 to ignore start node
   assert(bestAction)
   return bestAction
@@ -2486,8 +2489,9 @@ class Agent:
         # technique(s) to determine the best action to take.
 
 
-
-        return mcts(self._color, {})
+        action = mcts(self._color, {})
+        gc.collect() # reduce memory usage
+        return action
 
 
     def update(self, color: PlayerColor, action: Action, **referee: dict):
