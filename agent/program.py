@@ -2124,7 +2124,7 @@ def getActionsFromState(state : State, PlaceColour : PlayerColor, isFirstMove : 
   if not isFirstMove : 
      return placeActionsFromBoard(state, PlaceColour)
   
-  if isFirstMove :
+  else :
 
       actions = set()
 
@@ -2314,9 +2314,9 @@ def makeMoveWith(initState : State, tree : GameTree, playerNotWhosMove: Player, 
 
   leafNode.children.sort(key=heuristicFromChild, reverse=True)
 
+  
   if DEBUG :
-    print("Children actions ranked")
-    for t in leafNode.children: print(t.action)
+    #print("Children actions ranked"); for t in leafNode.children: print(t.action)
     print()
 
   didWin = None
