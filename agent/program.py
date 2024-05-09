@@ -548,7 +548,7 @@ def isPieceDeleted(board : Board, target : Target) -> bool :
 def isSquareEmpty(coord : Coord, board : Board) -> bool :
   return not coord in board.keys()
 
-def isValidPiecePlace(place : PlaceAction, board : Board) -> bool :
+def isPiecePlaceSquaresEmpty(place : PlaceAction, board : Board) -> bool :
 
   for c in list(place.coords) : 
     squareCoord : Coord = c
@@ -604,7 +604,7 @@ def coordPlaceOptions(board : Board, around : Coord) -> PlaceActionLst:
       #assert(not overLap(placement_adj_to_around, around))
       #assert(adjacentTo(placement_adj_to_around, around))
 
-      if isValidPiecePlace(placement_adj_to_around, board):
+      if isPiecePlaceSquaresEmpty(placement_adj_to_around, board):
         options.append(placement_adj_to_around)
 
   #assert(len(set(options)) == len(options))
