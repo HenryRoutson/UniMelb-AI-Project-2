@@ -1,9 +1,9 @@
 
 
-* referee : RED plays action PLACE(0-1, 1-0, 1-2, 1-1)
-* referee ! player error: ILLEGAL ACTION: Unknown action PLACE(0-1, 1-0, 1-2, 1-1)
 
 
+
+debug when iterations is 1
 
 referee["time_remaining"]: The number of seconds remaining in CPU time for your agent instance. If the referee is not configured with a time limit, this will be equal to None.
 • referee["space_remaining"]
