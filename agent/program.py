@@ -2051,7 +2051,7 @@ State = Board
 MAX_DEPTH = 9
 START_STATE = {} # empty board
 
-DEBUG = True
+DEBUG = False
 C = 0.01 # from Upper Confidence Bound formula
 
 # These two numbers should increase together
@@ -2285,13 +2285,12 @@ def whosMoveFromDepth(depth : int, playing : Player) -> Player :
   else : 
     return reversePlayer(playing)
 
-def makeMoveWith(initState : State, tree : GameTree, playerNotWhosMove: Player) -> GameTree :
+def makeMoveWith(initState : State, tree : GameTree, playerNotWhosMove: Player, isFirstMove : bool) -> GameTree :
   isMaxFirst = True
 
   # 1 Selection (min max)
   path, leafState = getMinMaxPath(tree, isMaxFirst, initState)
   depth = len(path)
-  isFirstMove = (depth == 1)
   whosMoveNotPlayer = whosMoveFromDepth(depth=depth, playing=playerNotWhosMove)
 
   # 2 Expansion (add a single node)
@@ -2348,13 +2347,14 @@ def UCB(Parent_n : GameTree, n : GameTree) :
   assert(n in Parent_n.children)
   return (U(n) / N(n)) + C * math.sqrt(math.log(N(Parent_n), 2) / N(n))
 
-def mcts(player : Player, fromState : State, iterations = 5000) -> Action :
+def mcts(player : Player, fromState : State, isFirstMove : bool, iterations = 5000) -> Action :
 
   if DEBUG : print("MCTS CALLED ,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,")
+  print("is first" + str(isFirstMove))
 
   gameTree = GameTree([], (0,0), None) # starting node
   for _ in range(iterations) :
-    gameTree = makeMoveWith(fromState, gameTree, player)
+    gameTree = makeMoveWith(fromState, gameTree, player, isFirstMove)
     if DEBUG :
       print("Tree")
       printTree(gameTree, fromState, toIndent=3)
@@ -2406,6 +2406,7 @@ class Agent:
 
         # init board state 
         self.board_state : Board = {}
+        self.firstMove : bool = True # prob could use empty board, but could introduct weird bugs, this is easier
               
 
 
@@ -2421,7 +2422,9 @@ class Agent:
         # technique(s) to determine the best action to take.
 
 
-        action = mcts(self._color, self.board_state, iterations=ITERATIONS) # TODO
+
+        action = mcts(self._color, self.board_state, iterations=ITERATIONS, isFirstMove=self.firstMove) # TODO
+        self.firstMove = False
         gc.collect() # reduce memory usage
         return action
 
