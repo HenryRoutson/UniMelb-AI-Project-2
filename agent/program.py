@@ -2051,7 +2051,7 @@ State = Board
 MAX_DEPTH = 9
 START_STATE = {} # empty board
 
-DEBUG = False
+DEBUG = True
 C = 0.01 # from Upper Confidence Bound formula
 
 # These two numbers should increase together
@@ -2120,29 +2120,25 @@ for x in range(BOARD_N) :
 
 def getActionsFromState(state : State, PlaceColour : PlayerColor, isFirstMove : bool) -> list[Action] :
 
-  actions = set()
 
-  def coordIsPlaceColour(coord : Coord) -> bool :
-      return state[coord] == PlaceColour
-     
-  if not isFirstMove :
-    coordsList = list(filter(coordIsPlaceColour, state.keys()))
-  else :
-     assert(len(state.keys()) == 0)
-     coordsList = allCoords
-
-  for coord in coordsList:
-        actions.update(coordPlaceOptions(state, coord))
-
-        # there are a million options for the first move 
-        # and you don't want to waste memory
-        if isFirstMove and len(actions) != 0 :
-            break
-        
+  if not isFirstMove : 
+     return placeActionsFromBoard(state, PlaceColour)
+  
   if isFirstMove :
-     assert(len(actions) != 0)
 
-  return list(actions)
+      actions = set()
+
+      for coord in allCoords:
+            actions.update(coordPlaceOptions(state, coord))
+
+            # there are a million options for the first move 
+            # and you don't want to waste memory
+            if len(actions) != 0 :
+                break
+
+      assert(len(actions) != 0)
+
+      return list(actions)
 
 
 
@@ -2404,6 +2400,10 @@ class Agent:
             print("Testing: I am playing as BLUE")
         else :
            print("error on colour match") # TODO
+
+
+        # init board state 
+        self.board_state : Board = {}
               
 
 
@@ -2419,7 +2419,7 @@ class Agent:
         # technique(s) to determine the best action to take.
 
 
-        action = mcts(self._color, {})
+        action = mcts(self._color, self.board_state) # TODO
         gc.collect() # reduce memory usage
         return action
 
@@ -2430,14 +2430,10 @@ class Agent:
         turn. You should use it to update the agent's internal game state. 
         """
 
-        # There is only one action type, PlaceAction
-        place_action: PlaceAction = action
-        c1, c2, c3, c4 = place_action.coords
+        self.board_state = deriveBoard(self.board_state, [action], reversePlayer(color))[0]
+        
 
-        # Here we are just printing out the PlaceAction coordinates for
-        # demonstration purposes. You should replace this with your own logic
-        # to update your agent's internal game state representation.
-        print(f"Testing: {color} played PLACE action: {c1}, {c2}, {c3}, {c4}")
+
 
 
 
