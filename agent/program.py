@@ -2198,8 +2198,14 @@ def getActionsFromState(state : State, PlaceColour : PlayerColor, isFirstMove : 
         # and you don't want to waste memory
         if isFirstMove and len(actions) != 0 :
             break
+        
+  if isFirstMove :
+     assert(len(actions) != 0)
 
   return list(actions)
+
+
+
 
 def applyActionToState(state : State, action : Action) -> State :
   return state # TODO
