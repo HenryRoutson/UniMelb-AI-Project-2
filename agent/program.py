@@ -1982,9 +1982,9 @@ DEBUG = True
 C = 0.01 # from Upper Confidence Bound formula
 
 # These two numbers should increase together
-ITERATIONS = 1
+ITERATIONS = 100
 EXPLORE_MIN = 13
-
+BRANCHING_FACTOR = 10
 
 
 from typing import Optional
@@ -2021,7 +2021,8 @@ def heuristic(state : State, action : Action, player : Player) -> float :
 
   # TODO in actual game implimentation, make this the number of columns and rows that the color is in
 
-  return 0
+  counts = Counter(state.values())
+  return counts[player] - counts[reversePlayer(player)]
 
 
 def isStateWin(state : State) -> Optional[Player] :
@@ -2244,14 +2245,17 @@ def makeMoveWith(initState : State, tree : GameTree, playerNotWhosMove: Player, 
   # 2 Expansion (add a single node)
   leafNode = path[-1]
   leafActions = getActionsFromState(leafState, whosMoveNotPlayer, isFirstMove)
-  for action in leafActions : 
+
+  def heuristicFromAction(action : Action) :
+    return heuristic(state=leafState, action=action, player=whosMoveNotPlayer)
+
+  leafActions.sort(key=heuristicFromAction, reverse=True)
+
+  for action in leafActions[:BRANCHING_FACTOR] : 
     leafNode.children.append(GameTree([], (0, 0), action))
   
-  def heuristicFromChild(child : GameTree) :
-    assert(child.action)
-    return heuristic(state=leafState, action=child.action, player=whosMoveNotPlayer)
+  
 
-  leafNode.children.sort(key=heuristicFromChild, reverse=True)
 
   
   if DEBUG :
@@ -2368,10 +2372,7 @@ class Agent:
 
 
 
-        action = mcts(self._color, self.board_state, iterations=ITERATIONS, isFirstMove=self.firstMove) # TODO
-        print("Mcts state ")
-        print(render_board(self.board_state))
-        
+        action = mcts(self._color, self.board_state, iterations=ITERATIONS, isFirstMove=self.firstMove) # TODO        
         self.firstMove = False
         gc.collect() # reduce memory usage
         return action

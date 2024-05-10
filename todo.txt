@@ -2,6 +2,9 @@
 
 
 
+avoid adding all children to speed up performance
+
+
 
 debug when iterations is 1
 
