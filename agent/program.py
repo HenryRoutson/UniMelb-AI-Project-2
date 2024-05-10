@@ -3,6 +3,9 @@
 
 
 
+
+
+
 ########################################################################################################################
 ########################################################################################################################
 ########################################################################################################################
@@ -2298,7 +2301,7 @@ def UCB(Parent_n : GameTree, n : GameTree) :
   return (U(n) / N(n)) + C * math.sqrt(math.log(N(Parent_n), 2) / N(n))
 
 def mcts(player : Player, fromState : State, isFirstMove : bool, iterations = 5000) -> Action :
-  if isFirstMove : iterations = 1 # 
+  if isFirstMove : iterations = 1 # OPTIMISATION
 
   gameTree = GameTree([], (0,0), None) # starting node
   for _ in range(iterations) :
