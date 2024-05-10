@@ -2383,7 +2383,7 @@ class Agent:
         turn. You should use it to update the agent's internal game state. 
         """
 
-        self.board_state = deriveBoard(self.board_state, [action], reversePlayer(color))[0]
+        self.board_state = deriveBoard(self.board_state, [action], color)[0]
         
 
 
