@@ -1982,9 +1982,9 @@ DEBUG = True
 C = 0.01 # from Upper Confidence Bound formula
 
 # These two numbers should increase together
-ITERATIONS = 100
+ITERATIONS = 50
 EXPLORE_MIN = 13
-BRANCHING_FACTOR = 10
+BRANCHING_FACTOR = 5
 
 
 from typing import Optional
@@ -2370,8 +2370,6 @@ class Agent:
         # the initial moves of the game, so you should use some game playing
         # technique(s) to determine the best action to take.
 
-
-
         action = mcts(self._color, self.board_state, iterations=ITERATIONS, isFirstMove=self.firstMove) # TODO        
         self.firstMove = False
         gc.collect() # reduce memory usage
@@ -2387,7 +2385,8 @@ class Agent:
         self.board_state = deriveBoard(self.board_state, [action], color)[0]
         
 
-
-
+def profile_test() :
+   mcts(PlayerColor.BLUE, { }, iterations=ITERATIONS, isFirstMove=True)
+cProfile.run("profile_test()")
 
 
