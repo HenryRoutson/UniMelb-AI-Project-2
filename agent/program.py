@@ -59,7 +59,7 @@ import math
 import copy
 import time
 import gc
-
+from collections.abc import Iterable
 
 
 
@@ -509,10 +509,11 @@ def overLap(place : PlaceAction ,coord : Coord) :
   return coord in place.coords
   
 
+
 def printBoardWithSquareAndPiece(coord : Coord, place : PlaceAction, PlaceColour : PlayerColor) :
   print(render_board(deriveBoard({coord : PlayerColor.BLUE}, [place], PlaceColour)[0], coord))
 
-def coordPlaceOptions(board : Board, around : Coord) -> PlaceActionLst:
+def coordPlaceOptions(board : Board, around : Coord) -> Iterable[PlaceAction]:
   # all place actions around the around coord
 
   """
@@ -523,6 +524,7 @@ def coordPlaceOptions(board : Board, around : Coord) -> PlaceActionLst:
 
   # assert(board[around] == PLACE_COLOUR) # to connect other pieces, this needs to be the place colour
 
+  """
   options = []
 
   for placement_adj_to_center in GENERATED_PIECE_PLACEMENTS :
@@ -539,6 +541,18 @@ def coordPlaceOptions(board : Board, around : Coord) -> PlaceActionLst:
         options.append(placement_adj_to_around)
 
   #assert(len(set(options)) == len(options))
+
+  """
+
+
+  def filterByBoardSquaresBeingEmpty(placemnt : PlaceAction) :
+     return isPiecePlaceSquaresEmpty(placemnt, board)
+
+  def makeGeneratedAdjacentToAround(placement : PlaceAction) :
+     return offsetPlaceAction(placement, around, CENTER) 
+
+  placements_adj_to_around = map(makeGeneratedAdjacentToAround, GENERATED_PIECE_PLACEMENTS)
+  options = filter(filterByBoardSquaresBeingEmpty, placements_adj_to_around)
 
   return options
   
@@ -1984,7 +1998,7 @@ DEBUG = False
 C = 0.01 # from Upper Confidence Bound formula
 
 # These two numbers should increase together
-ITERATIONS = 500
+ITERATIONS = 50
 EXPLORE_MIN = 13
 BRANCHING_FACTOR = 5
 
@@ -2394,9 +2408,33 @@ class Agent:
         # the initial moves of the game, so you should use some game playing
         # technique(s) to determine the best action to take.
 
-        action = mcts(self._color, self.board_state, iterations=ITERATIONS, isFirstMove=self.firstMove) # TODO        
-        self.firstMove = False
+        def action_mcts() :
+           return mcts(self._color, self.board_state, iterations=ITERATIONS, isFirstMove=self.firstMove)
+
+
+
+        IS_PROFILE = True
+
+        if IS_PROFILE :
+
+
+          import cProfile
+          with cProfile.Profile() as pr:
+              
+              print("Print stats")
+              
+              action = action_mcts()
+              
+              pr.print_stats(sort='cumulative')
+              print("end print stats")
+        
+        else : 
+              
+              action = action_mcts()
+           
+
         gc.collect() # reduce memory usage
+        self.firstMove = False
         return action
 
 

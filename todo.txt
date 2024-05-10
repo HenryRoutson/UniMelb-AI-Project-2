@@ -2,6 +2,37 @@
 
 
 
+
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+        1    0.001    0.001   58.721   58.721 program.py:2397(action_mcts)
+        1    0.008    0.008   58.721   58.721 program.py:2303(mcts)
+       50    0.006    0.000   58.371    1.167 program.py:2238(makeMoveWith)
+       50    0.001    0.000   45.614    0.912 program.py:2052(getActionsFromState)
+       50    0.025    0.001   45.614    0.912 program.py:547(placeActionsFromBoard)
+     2045    1.269    0.001   45.434    0.022 program.py:515(coordPlaceOptions)
+   224950    5.437    0.000   34.834    0.000 program.py:902(offsetPlaceAction)
+      338    0.003    0.000   11.581    0.034 program.py:2081(applyActionToState)
+      338    0.030    0.000   11.578    0.034 program.py:572(deriveBoard)
+   899800    1.881    0.000   11.505    0.000 program.py:905(<lambda>)
+   899800    1.892    0.000   11.259    0.000 program.py:906(<lambda>)
+       51    0.013    0.000   10.098    0.198 program.py:2170(getMinMaxPath)
+   899800    3.526    0.000    9.624    0.000 coord.py:114(__add__)
+   899800    3.469    0.000    9.367    0.000 coord.py:120(__sub__)
+   224950    1.678    0.000    9.321    0.000 program.py:482(isPiecePlaceSquaresEmpty)
+   450238    3.670    0.000    8.380    0.000 actions.py:20(coords)
+      484    0.076    0.000    5.881    0.012 program.py:298(boardEliminateFilledRowsOrColumns)
+    10648    1.454    0.000    5.805    0.001 program.py:279(checkAndRemoveColumnOrRowFilled)
+161780/338    1.641    0.000    5.649    0.017 copy.py:118(deepcopy)
+      338    0.192    0.001    5.639    0.017 copy.py:217(_deepcopy_dict)
+   351562    1.622    0.000    3.366    0.000 program.py:479(isSquareEmpty)
+
+
+
+
+
+
+
 avoid adding all children to speed up performance
 
 
