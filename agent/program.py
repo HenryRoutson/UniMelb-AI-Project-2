@@ -184,7 +184,6 @@ def apply_ansi(
 
 def render_board(
     board: dict[Coord, PlayerColor], 
-    target: Coord | None = None,
     ansi: bool = True
 ) -> str:
     """
@@ -198,12 +197,11 @@ def render_board(
     for r in range(BOARD_N):
         for c in range(BOARD_N):
             if board.get(Coord(r, c), None):
-                is_target = target is not None and Coord(r, c) == target
                 color = board[Coord(r, c)]
                 color = "r" if color == PlayerColor.RED else "b"
-                text = f"{color}" if not is_target else f"{color.upper()}"
+                text = f"{color}" 
                 if ansi:
-                    output += apply_ansi(text, color=color, bold=is_target)
+                    output += apply_ansi(text, color=color)
                 else:
                     output += text
             else:
@@ -2371,6 +2369,9 @@ class Agent:
 
 
         action = mcts(self._color, self.board_state, iterations=ITERATIONS, isFirstMove=self.firstMove) # TODO
+        print("Mcts state ")
+        print(render_board(self.board_state))
+        
         self.firstMove = False
         gc.collect() # reduce memory usage
         return action
