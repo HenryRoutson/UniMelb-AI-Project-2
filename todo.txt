@@ -3,9 +3,10 @@
 
 
 Add to heuristic for the most number of columns and rows taken up
-Add in to just use heuristic if the number of squares on the board is low as the branching factor is too high
-Check the depth of the game tree and limit as this could be needlessly big
+  but weight this down compared to number total
 
+Add in to just use greedy heuristic if the number of squares on the board is low as the branching factor is too high
+Visualise the game tree and see if everything is working
 
 
 
