@@ -513,7 +513,7 @@ def overLap(place : PlaceAction ,coord : Coord) :
 def printBoardWithSquareAndPiece(coord : Coord, place : PlaceAction, PlaceColour : PlayerColor) :
   print(render_board(deriveBoard({coord : PlayerColor.BLUE}, [place], PlaceColour)[0], coord))
 
-def coordPlaceOptions(board : Board, around : Coord) -> Iterable[PlaceAction]:
+def coordPlaceOptions(board : Board, around : Coord) -> list[PlaceAction]:
   # all place actions around the around coord
 
   """
@@ -554,11 +554,11 @@ def coordPlaceOptions(board : Board, around : Coord) -> Iterable[PlaceAction]:
   placements_adj_to_around = map(makeGeneratedAdjacentToAround, GENERATED_PIECE_PLACEMENTS)
   options = filter(filterByBoardSquaresBeingEmpty, placements_adj_to_around)
 
-  return options
+  return list(options)
   
   
 
-def placeActionsFromBoard(board : Board, PlaceColour : PlayerColor) -> PlaceActionLst:
+def placeActionsFromBoard(board : Board, PlaceColour : PlayerColor) -> Iterable[PlaceAction]:
   # return a list of all pieces you can place connecting to a placeAction
 
   neighbors = set()
@@ -1089,15 +1089,15 @@ def Vec2ToCoord(vec : Vector2) -> Coord :
 def rotatePiece90(place : PlaceAction) -> PlaceAction : 
 
   # rotate around 90
-  vectors : list[Vector2] =  list(map(coordToVec2 ,place.coords))
-  rotatedVectors : list[Vector2]  = list(map(lambda c : rotateVector90(c, Vector2(0,0)), vectors))
+  vectors : map[Vector2] =  map(coordToVec2 ,place.coords)
+  rotatedVectors : map[Vector2]  = map(lambda c : rotateVector90(c, Vector2(0,0)), vectors)
 
   # and then move to the lowest coords
   # used to avoid out of bounds errors
   min_r = min(map(lambda v : v.r, rotatedVectors))
   min_c = min(map(lambda v : v.c, rotatedVectors))
   offset = Vector2(min_r, min_c) 
-  rotatedAndMovedVectors : list[Vector2] = list(map(lambda vec : vec - offset, rotatedVectors))
+  rotatedAndMovedVectors : map[Vector2] = map(lambda vec : vec - offset, rotatedVectors)
   rotatedAndMovedCoords : list[Coord] = list(map(Vec2ToCoord, rotatedAndMovedVectors))
 
   return coordsToPlaceAction(rotatedAndMovedCoords)
@@ -1991,7 +1991,7 @@ assert(wrappingIndexDistance(3, 6) == 3)
 State = Board
 
 
-MAX_DEPTH = 9
+MAX_DEPTH = 3
 START_STATE = {} # empty board
 
 DEBUG = False
@@ -2069,7 +2069,6 @@ def getActionsFromState(state : State, PlaceColour : PlayerColor, isFirstMove : 
   if not isFirstMove : 
     actions = placeActionsFromBoard(state, PlaceColour)
   
-
     return actions
 
   else :
@@ -2314,8 +2313,7 @@ def UCB(Parent_n : GameTree, n : GameTree) :
   assert(n in Parent_n.children)
   return (U(n) / N(n)) + C * math.sqrt(math.log(N(Parent_n), 2) / N(n))
 
-def mcts(player : Player, fromState : State, isFirstMove : bool, iterations = 5000) -> Action :
-  if isFirstMove : iterations = 1 # OPTIMISATION
+def mcts(player : Player, fromState : State, isFirstMove : bool, iterations) -> Action :
 
   gameTree = GameTree([], (0,0), None) # starting node
   for _ in range(iterations) :
