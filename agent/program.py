@@ -54,7 +54,6 @@ from queue import PriorityQueue
 from collections import defaultdict
 import math
 import copy
-import cProfile
 import time
 import gc
 
@@ -1978,11 +1977,11 @@ State = Board
 MAX_DEPTH = 9
 START_STATE = {} # empty board
 
-DEBUG = True
+DEBUG = False
 C = 0.01 # from Upper Confidence Bound formula
 
 # These two numbers should increase together
-ITERATIONS = 50
+ITERATIONS = 500
 EXPLORE_MIN = 13
 BRANCHING_FACTOR = 5
 
@@ -2197,7 +2196,10 @@ def scoreFromTree(x : GameTree) :
 
 def rolloutSim(state : State, whosMove : Player, depth : int) -> Optional[Player] :
 
+
+
   while depth != MAX_DEPTH :
+    break  # TODO
 
     action = rolloutStrategy(state, whosMove)
     if action == None :
@@ -2219,10 +2221,6 @@ def rolloutSim(state : State, whosMove : Player, depth : int) -> Optional[Player
 def reversePlayer(player : Player) -> Player :
   if player == PlayerColor.RED : return PlayerColor.BLUE
   if player == PlayerColor.BLUE : return PlayerColor.RED
-  print("here")
-  print(player)
-  print(player == PlayerColor.RED)
-  raise Exception("error")
   assert(False)
 
 def whosMoveFromDepth(depth : int, playing : Player) -> Player :
@@ -2300,6 +2298,7 @@ def UCB(Parent_n : GameTree, n : GameTree) :
   return (U(n) / N(n)) + C * math.sqrt(math.log(N(Parent_n), 2) / N(n))
 
 def mcts(player : Player, fromState : State, isFirstMove : bool, iterations = 5000) -> Action :
+  if isFirstMove : iterations = 1 # 
 
   gameTree = GameTree([], (0,0), None) # starting node
   for _ in range(iterations) :
@@ -2337,6 +2336,28 @@ class Agent:
         This constructor method runs when the referee instantiates the agent.
         Any setup and/or precomputation should be done here.
         """
+
+
+
+        """
+
+        def profile_test() :
+          mcts(PlayerColor.BLUE, { }, iterations=ITERATIONS, isFirstMove=True)
+
+        import cProfile
+        with cProfile.Profile() as pr:
+            print("Print stats")
+            profile_test()
+            pr.print_stats(sort='cumulative')
+            print("end print stats")
+
+        """
+
+
+        
+
+
+
 
         # bruh
         def PlayerColorFromString(s) -> PlayerColor :
@@ -2385,8 +2406,8 @@ class Agent:
         self.board_state = deriveBoard(self.board_state, [action], color)[0]
         
 
-def profile_test() :
-   mcts(PlayerColor.BLUE, { }, iterations=ITERATIONS, isFirstMove=True)
-cProfile.run("profile_test()")
+
+
+
 
 
