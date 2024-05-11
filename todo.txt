@@ -3,9 +3,9 @@
 
 try mcts, use greedy if fails
 
-
-optimise boardEliminateFilledRowsOrColumns
-
+Avoid going all in on the same column
+  multiply rows * columns to create this
+  
 
 
 why is there a board with only blue? 
