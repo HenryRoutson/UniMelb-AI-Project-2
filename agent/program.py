@@ -300,7 +300,19 @@ FILLED_COLUMNS_AND_ROW_SETS = [
 def fillColumnOrRow(index : int, isColumn : bool) -> set[Coord] :
 
   result = FILLED_COLUMNS_AND_ROW_SETS[isColumn][index]
-  #assert(result == fillColumnOrRowCompileTime(index, isColumn)) 
+
+  if VALIDATE :
+
+    assert(result == fillColumnOrRowCompileTime(index, isColumn)) 
+
+    result_list = list(result)
+    if isColumn :
+      assert(result_list[0].c == result_list[1].c)
+    else :
+      assert(result_list[0].r == result_list[1].r)
+      
+
+
   return result
 
 
@@ -312,8 +324,16 @@ def removeCoords(board : Board, coords : set[Coord]) -> Board :
 
 
 def removeRowOrColumnFromBoard(board : Board, index : int, isColumn : bool) -> Board:
+  
   line : set[Coord] = fillColumnOrRow(index, isColumn)
-  assert(len(line - board.keys()) == 0) #TODO
+
+  if VALIDATE :
+
+    if not (len(line - board.keys()) == 0) :
+      print()
+      print(line, board.keys(), isColumn)
+      assert(False)
+
   board = removeCoords(board, line)
   return board
 
@@ -406,6 +426,8 @@ def boardEliminateFilledRowsOrColumns(board : Board) -> tuple[Board, bool] :
 
   columns, rows = columnsAndRowsFullyOccupied(board)
   didElim = (len(columns) != 0) or (len(rows) != 0)
+
+  print(columns, rows)
 
   # remove from board
   for c in columns :
