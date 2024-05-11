@@ -359,7 +359,14 @@ def boardEliminateFilledRowsOrColumnsWrapper(board : Board) -> tuple[Board, bool
     
     fast = boardEliminateFilledRowsOrColumns(qcopy(board))
     slow = boardEliminateFilledRowsOrColumnsOld(qcopy(board))
-    assert(slow == fast)
+    if (slow != fast) :
+       
+      print(render_board(fast[0]))
+      print(fast[1])
+      print(render_board(slow[0]))
+      print(slow[1])
+      
+      assert(False)
 
   fast = boardEliminateFilledRowsOrColumns(board)
   return fast
@@ -381,7 +388,7 @@ def boardEliminateFilledRowsOrColumnsOld(board : Board) -> tuple[Board, bool] :
     for i in BOARD_ITER :
       
       board, didElimOnThis = checkAndRemoveColumnOrRowFilled(board, i, b)
-      if didElimOnThis : didElimOnThis = True
+      if didElimOnThis : didElim = True
 
   return (board, didElim)
 
@@ -426,8 +433,6 @@ def boardEliminateFilledRowsOrColumns(board : Board) -> tuple[Board, bool] :
 
   columns, rows = columnsAndRowsFullyOccupied(board)
   didElim = (len(columns) != 0) or (len(rows) != 0)
-
-  print(columns, rows)
 
   # remove from board
   for c in columns :
