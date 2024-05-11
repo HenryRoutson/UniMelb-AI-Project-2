@@ -267,10 +267,12 @@ def emptyPlacesCount(board : Board, index : int, isColumn : bool) -> int :
 
 
 
-# TODO benchmark
-def fillColumnOrRow(index : int, isColumn : bool) -> set[Coord] :
 
-  
+
+
+
+def fillColumnOrRowCompileTime(index : int, isColumn : bool) -> set[Coord] :
+     
   if isColumn :
 
     def iterToColumnCoord(i : int) :
@@ -288,6 +290,18 @@ def fillColumnOrRow(index : int, isColumn : bool) -> set[Coord] :
   return set(l)
 
 
+FILLED_COLUMNS_AND_ROW_SETS = [
+   [fillColumnOrRowCompileTime(i, False) for i in BOARD_ITER],
+   [fillColumnOrRowCompileTime(i, True) for i in BOARD_ITER],
+]
+
+
+
+def fillColumnOrRow(index : int, isColumn : bool) -> set[Coord] :
+
+  result = FILLED_COLUMNS_AND_ROW_SETS[isColumn][index]
+  #assert(result == fillColumnOrRowCompileTime(index, isColumn))
+  return result
 
 
 def checkAndRemoveColumnOrRowFilled(board : Board, index : int, isColumn : bool) -> tuple[Board, bool] :
