@@ -1,5 +1,9 @@
 
 
+change fillColumnOrRow to precompute sets
+
+
+
 
 why is there a board with only blue? 
 derive board only places in one colour, need to make a function which alternates in colour
@@ -19,10 +23,6 @@ b b b b b b b . . . b
 
 
 
-
-
-Add to heuristic for the most number of columns and rows taken up
-  but weight this down compared to number total
 
 Add in to just use greedy heuristic if the number of squares on the board is low as the branching factor is too high
 Visualise the game tree and see if everything is working
