@@ -300,19 +300,6 @@ FILLED_COLUMNS_AND_ROW_SETS = [
 def fillColumnOrRow(index : int, isColumn : bool) -> set[Coord] :
 
   result = FILLED_COLUMNS_AND_ROW_SETS[isColumn][index]
-
-  if VALIDATE :
-
-    assert(result == fillColumnOrRowCompileTime(index, isColumn)) 
-
-    result_list = list(result)
-    if isColumn :
-      assert(result_list[0].c == result_list[1].c)
-    else :
-      assert(result_list[0].r == result_list[1].r)
-      
-
-
   return result
 
 
@@ -326,21 +313,7 @@ def removeCoords(board : Board, coords : set[Coord]) -> Board :
 def removeRowOrColumnFromBoard(board : Board, index : int, isColumn : bool) -> Board:
   
   line : set[Coord] = fillColumnOrRow(index, isColumn)
-
-  if VALIDATE :
-
-    if not (len(line - board.keys()) == 0) :
-      print()
-
-      d = dict()
-      for c in line : d[c] = PlayerColor.RED
-
-      print(render_board(d))
-      print(render_board(board))
-      print(line, isColumn)
-      assert(False)
-
-  board = removeCoords(board, line)
+  board = removeCoords(board, line) # sometimes not all coords will be present if row and column are eliminated at the same time
   return board
 
 def checkAndRemoveColumnOrRowFilled(board : Board, index : int, isColumn : bool) -> tuple[Board, bool] :
@@ -360,46 +333,9 @@ def checkAndRemoveColumnOrRowFilled(board : Board, index : int, isColumn : bool)
 
 
 def boardEliminateFilledRowsOrColumnsWrapper(board : Board) -> tuple[Board, bool] :
-
-  if VALIDATE :
-    
-    fast = boardEliminateFilledRowsOrColumns(qcopy(board))
-    slow = boardEliminateFilledRowsOrColumnsOld(qcopy(board))
-    if (slow != fast) :
-       
-      print(render_board(fast[0]))
-      print(fast[1])
-      print(render_board(slow[0]))
-      print(slow[1])
-      
-      assert(False)
-
+  
   fast = boardEliminateFilledRowsOrColumns(board)
   return fast
-
-
-
-
-
-
-
-# DON'T USE TOO INEFFICIENT
-def boardEliminateFilledRowsOrColumnsOld(board : Board) -> tuple[Board, bool] :
-
-  # TODO you can optimise this a lot with subset logic
-
-  didElim = False
-  for b in [True, False] :
-
-    for i in BOARD_ITER :
-      
-      board, didElimOnThis = checkAndRemoveColumnOrRowFilled(board, i, b)
-      if didElimOnThis : didElim = True
-
-  return (board, didElim)
-
-
-
 
 allCoordsSet = set()
 for r in BOARD_ITER :
@@ -773,7 +709,7 @@ def deriveBoardBruteForce(original_board : Board, PlaceActionLst : PlaceActionLs
      for coord in place.coords :
                 
         board[coord] = PlaceColour
-        (board, didElimThisTime) = boardEliminateFilledRowsOrColumnsOld(board)
+        (board, didElimThisTime) = boardEliminateFilledRowsOrColumns(board)
         if didElimThisTime : didElim = True
         
   return (board, didElim)
@@ -2170,12 +2106,12 @@ State = Board
 MAX_DEPTH = 3
 START_STATE = {} # empty board
 
-DEBUG = False
+DEBUG = True
 C = 0.01 # from Upper Confidence Bound formula
 
 # These two numbers should increase together
 ITERATIONS = 50
-EXPLORE_MIN = 13
+EXPLORE_MIN = 1
 BRANCHING_FACTOR = 5
 VALIDATE = True
 
@@ -2345,31 +2281,6 @@ def deriveBoardWrapper(original_board : Board, placeActionLst : PlaceActionLst, 
 
   # call all functions once for cprofile
 
-  if VALIDATE :
-
-    bf_result = deriveBoardBruteForce(qcopy(original_board), placeActionLst, PlaceColour)
-    result = deriveBoard(qcopy(original_board), placeActionLst, PlaceColour)
-
-    valid = (bf_result == result) 
-
-    if not valid :
-
-      print("DERIVE BOARD IS NOT VALID")
-      print(len(placeActionLst))
-      print(placeActionLst)
-      print()
-
-      print(render_board(original_board))
-      print(render_board(bf_result[0]))
-      print(render_board(result[0]))
-      print()
-
-      print(bf_result[1])
-      print(result[1])
-      printBoardPlaceAction(placeActionLst, PlaceColour)
-
-      assert(False)
-
   result = deriveBoard(original_board, placeActionLst, PlaceColour)
   return result
 
@@ -2526,10 +2437,6 @@ def makeMoveWith(initState : State, tree : GameTree, playerNotWhosMove: Player, 
   for action in leafActions[:BRANCHING_FACTOR] : 
     leafNode.children.append(GameTree([], (0, 0), action))
   
-  
-
-
-  
   if DEBUG :
     #print("Children actions ranked"); for t in leafNode.children: print(t.action)
     print()
@@ -2578,7 +2485,7 @@ def mcts(player : Player, fromState : State, isFirstMove : bool, iterations : in
     gameTree = makeMoveWith(fromState, gameTree, player, isFirstMove)
     if DEBUG :
       print("Tree")
-      printTree(gameTree, fromState, toIndent=2, playing=player)
+      printTree(gameTree, fromState, toIndent=3, playing=player)
 
   nodes, endState = getMinMaxPath(gameTree, True, fromState, player)
   bestAction = nodes[1].action # 1 to ignore start node
@@ -2592,7 +2499,7 @@ def mcts(player : Player, fromState : State, isFirstMove : bool, iterations : in
 def random_moves(player : Player, fromState : State, isFirstMove : bool) -> Action :
 
   actions = getActionsFromState(fromState, player, isFirstMove)
-  return actions[0]
+  return random.choice(actions)
 
 
 
@@ -2683,7 +2590,7 @@ class Agent:
         def get_action() :
            
           # if branching factor is too high, be quick and greedy
-          if len(self.board_state) < 1000 :
+          if len(self.board_state) < 10 :
             return greedy_moves(self._color, self.board_state, isFirstMove=self.firstMove)
 
           # if the branching factor is low, think ahead

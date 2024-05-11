@@ -3,6 +3,13 @@
 
 try mcts, use greedy if fails
 
+
+
+try to limit depth
+
+
+
+
 Avoid going all in on the same column
   multiply rows * columns to create this
   
