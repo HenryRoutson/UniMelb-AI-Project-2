@@ -310,6 +310,12 @@ def removeCoords(board : Board, coords : set[Coord]) -> Board :
   
     return board
 
+
+def removeRowOrColumnFromBoard(board : Board, index : int, isColumn : bool) -> Board:
+  line : set[Coord] = fillColumnOrRow(index, isColumn)
+  board = removeCoords(board, line)
+  return board
+
 def checkAndRemoveColumnOrRowFilled(board : Board, index : int, isColumn : bool) -> tuple[Board, bool] :
 
   line : set[Coord] = fillColumnOrRow(index, isColumn)
@@ -323,19 +329,93 @@ def checkAndRemoveColumnOrRowFilled(board : Board, index : int, isColumn : bool)
   return (board, isLineFilled) # board, didElim
 
 
+
+
+
+def boardEliminateFilledRowsOrColumnsWrapper(board : Board) -> tuple[Board, bool] :
+
+
+  fast = boardEliminateFilledRowsOrColumns(board)
+  
+  if VALIDATE :
+    
+    fast = boardEliminateFilledRowsOrColumns(qcopy(board))
+    slow = boardEliminateFilledRowsOrColumnsOld(qcopy(board))
+    assert(slow == fast)
+
+  return fast
+
+
+
+
+
+
+
 # DON'T USE TOO INEFFICIENT
-def boardEliminateFilledRowsOrColumns(board : Board) -> tuple[Board, bool] :
+def boardEliminateFilledRowsOrColumnsOld(board : Board) -> tuple[Board, bool] :
 
   # TODO you can optimise this a lot with subset logic
 
   didElim = False
   for b in [True, False] :
+
     for i in BOARD_ITER :
       
       board, didElimOnThis = checkAndRemoveColumnOrRowFilled(board, i, b)
       if didElimOnThis : didElimOnThis = True
 
   return (board, didElim)
+
+
+
+
+allCoordsSet = set()
+for r in BOARD_ITER :
+   for c in BOARD_ITER :
+      allCoordsSet.add(Coord(r=r, c=c))
+
+
+boardIterSet = set(BOARD_ITER)
+
+
+def missingIndexes(s : set) -> set : 
+  return boardIterSet - s
+
+def missingCoords(coords : Iterable[Coord]) -> set[Coord] :
+  return allCoordsSet - set(coords)
+
+
+def columnsAndRowsFullyOccupied(board : Board) :
+
+  # columns and rows which are occupied 
+  # are not occupied by empty squares
+
+  # find rows and columns occupied by one empty piece
+  # and then take the inverse to find rows and columns not occupied by an empty piece
+
+  unoccupiedCoords = missingCoords(board.keys())
+  columns_with_emtpy, rows_with_empty = columnsAndRowsOccupied(unoccupiedCoords)
+
+  columns_without_empty = missingIndexes(columns_with_emtpy)
+  rows_without_empty = missingIndexes(rows_with_empty)
+
+  return (columns_without_empty, rows_without_empty)
+
+
+
+def boardEliminateFilledRowsOrColumns(board : Board) -> tuple[Board, bool] :
+
+  columns, rows = columnsAndRowsFullyOccupied(board)
+  didElim = (len(columns) != 0) or (len(rows) != 0)
+
+  # remove from board
+  for c in columns :
+     board = removeRowOrColumnFromBoard(board, c, True)
+  for r in rows : 
+     board = removeRowOrColumnFromBoard(board, r, False)
+
+  return board, didElim
+
 
 
 
@@ -539,8 +619,8 @@ def overLap(place : PlaceAction ,coord : Coord) :
   
 
 
-def printBoardWithSquareAndPiece(coord : Coord, place : PlaceAction, PlaceColour : PlayerColor) :
-  print(render_board(deriveBoard({coord : PlayerColor.BLUE}, [place], PlaceColour)[0], coord))
+def printBoardPlaceAction(placeActions : list[PlaceAction], PlaceColour : PlayerColor) :
+  print(render_board(deriveBoardBruteForce({}, placeActions, PlaceColour)[0]))
 
 def coordPlaceOptions(board : Board, around : Coord) -> list[PlaceAction]:
   # all place actions around the around coord
@@ -612,7 +692,7 @@ def qcopy(board : Board) -> Board :
 
 
 
-def removeRowsAndColumnsOnCoord(coord : Coord , board : Board) -> tuple[Board, bool]  :
+def removeColumnsAndRowsOnCoord(coord : Coord , board : Board) -> tuple[Board, bool]  :
    
     didElim = False
 
@@ -639,15 +719,12 @@ def deriveBoard(original_board : Board, placeActionLst : PlaceActionLst, PlaceCo
      for coord in place.coords :
         
         if coord in board.keys() :
-           board, didElimThisTime = removeRowsAndColumnsOnCoord(coord, board)
+           board, didElimThisTime = removeColumnsAndRowsOnCoord(coord, board)
            if didElimThisTime : didElim = True
            
         board[coord] = PlaceColour
 
-
-  
-
-  (board, didElimThisTime) = boardEliminateFilledRowsOrColumns(board)
+  (board, didElimThisTime) = boardEliminateFilledRowsOrColumnsWrapper(board)
   if didElimThisTime : didElim = True
 
   return (board, didElim)
@@ -664,7 +741,7 @@ def deriveBoardBruteForce(original_board : Board, PlaceActionLst : PlaceActionLs
      for coord in place.coords :
                 
         board[coord] = PlaceColour
-        (board, didElimThisTime) = boardEliminateFilledRowsOrColumns(board)
+        (board, didElimThisTime) = boardEliminateFilledRowsOrColumnsWrapper(board)
         if didElimThisTime : didElim = True
         
   return (board, didElim)
@@ -2108,7 +2185,7 @@ def columnsAndRowsOccupied(coords : Iterable[Coord]) :
     rows.add(coord.r)
     columns.add(coord.c)
 
-  return (rows, columns)
+  return (columns, rows)
 
 def columnsAndRowsOccupied_WithColour(board : Board, player : PlayerColor) :
 
@@ -2148,10 +2225,10 @@ def heuristic(stateBeforeAction : State, action : Action, player : Player) -> fl
   heuristicSquareCountDifference = counts[player] - counts[reversedPlayer]
 
   #
-  heuristicRowsAndColumnsOccupiedDifferent = numColumnsAndRowsOccupied__WithColour(stateAfterAction, player) - numColumnsAndRowsOccupied__WithColour(stateAfterAction, reversedPlayer)
+  heuristicColumnsAndRowsOccupiedDifferent = numColumnsAndRowsOccupied__WithColour(stateAfterAction, player) - numColumnsAndRowsOccupied__WithColour(stateAfterAction, reversedPlayer)
 
   #
-  return heuristicSquareCountDifference + 0.1 * heuristicRowsAndColumnsOccupiedDifferent
+  return heuristicSquareCountDifference + 0.1 * heuristicColumnsAndRowsOccupiedDifferent
 
 
 def isStateWin(state : State) -> Optional[Player] :
@@ -2237,8 +2314,6 @@ def deriveBoardWrapper(original_board : Board, placeActionLst : PlaceActionLst, 
 
   # call all functions once for cprofile
   result = deriveBoard(original_board, placeActionLst, PlaceColour)
- 
-
 
   if VALIDATE :
 
@@ -2250,13 +2325,17 @@ def deriveBoardWrapper(original_board : Board, placeActionLst : PlaceActionLst, 
 
       print("DERIVE BOARD IS NOT VALID")
       print(len(placeActionLst))
+      print(placeActionLst)
+      print()
 
+      print(render_board(original_board))
       print(render_board(bf_result[0]))
       print(render_board(result[0]))
+      print()
 
       print(bf_result[1])
       print(result[1])
-      print()
+      printBoardPlaceAction(placeActionLst, PlaceColour)
 
       assert(False)
 
@@ -2360,8 +2439,6 @@ def scoreFromTree(x : GameTree) :
   return scoreFromwinProp(x.winProp)
 
 def rolloutSim(state : State, whosMove : Player, depth : int) -> Optional[Player] :
-
-
 
   while depth != MAX_DEPTH :
     break  # TODO
