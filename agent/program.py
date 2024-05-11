@@ -265,49 +265,58 @@ def emptyPlacesCount(board : Board, index : int, isColumn : bool) -> int :
 # Code for removing filled lines
 
 
+
+
+# TODO benchmark
 def fillColumnOrRow(index : int, isColumn : bool) -> set[Coord] :
 
-  a : set[Coord] = set()
-  for i in BOARD_ITER :
-    if (isColumn) :
-      a.add(Coord(r=i, c=index))
-    else :
-      a.add(Coord(r=index, c=i))
+  
+  if isColumn :
 
-  return a
+    def iterToColumnCoord(i : int) :
+      return Coord(r=i, c=index)
 
-def checkAndRemoveColumnOrRowFilled(board : Board, index : int, isColumn : bool) -> Optional[Board] :
+    l = map(iterToColumnCoord, BOARD_ITER)
+
+  else :
+
+    def iterToRowCoord(i : int) :
+      return Coord(r=i, c=index)
+
+    l = map(iterToRowCoord, BOARD_ITER)
+
+  return set(l)
+
+
+
+
+def checkAndRemoveColumnOrRowFilled(board : Board, index : int, isColumn : bool) -> tuple[Board, bool] :
 
   line : set[Coord] = fillColumnOrRow(index, isColumn)
+
   lineRemainder : set[Coord] = line - set(board.keys())
   isLineFilled : bool = len(lineRemainder) == 0
+  didElim = isLineFilled
 
   if (isLineFilled) :
-    #print("LINE ELIMINATION")
-    #print(render_board(board))
-    #print("LINE ELIMINATION")
     for key in line :
       board.pop(key, None)
 
-  if (isLineFilled) :
-    return board
-
-  return None
+  return (board, didElim)
 
 
+# DON'T USE TOO INEFFICIENT
 def boardEliminateFilledRowsOrColumns(board : Board) -> tuple[Board, bool] :
 
   didElim = False
   for b in [True, False] :
     for i in BOARD_ITER :
       
-      cur = checkAndRemoveColumnOrRowFilled(board, i, b)
-      if cur != None :
-        board = cur
-        didElim = True
-
+      board, didElimOnThis = checkAndRemoveColumnOrRowFilled(board, i, b)
+      if didElimOnThis : didElimOnThis = True
 
   return (board, didElim)
+
 
 
 
@@ -574,33 +583,73 @@ def placeActionsFromBoard(board : Board, PlaceColour : PlayerColor) -> Iterable[
 
 def qcopy(board : Board) -> Board :
   newBoard : Board = dict()
-  for item in board.items() :
-
-    key : Coord = item[0]
-    value : PlayerColor = item[1]
-
+  
+  for (key, value) in board.items() :
     newBoard[key] = value
 
   return newBoard
 
-def deriveBoard(original_board : Board, PlaceActionLst : PlaceActionLst, PlaceColour : PlayerColor) -> tuple[Board, bool] :
 
-  board = copy.deepcopy(original_board)
-  #board = qcopy(original_board)
+
+
+def removeRowsAndColumnsOnCoord(coord : Coord , board : Board) -> tuple[Board, bool]  :
+   
+    didElim = False
+
+    board, didElimThisTime = checkAndRemoveColumnOrRowFilled(board, coord.c, True)
+    didElim = max(didElim, didElimThisTime)
+
+    board, didElimThisTime = checkAndRemoveColumnOrRowFilled(board, coord.r, False)
+    didElim = max(didElim, didElimThisTime)
+
+    return (board, didElim)
+   
+
+def deriveBoard(original_board : Board, placeActionLst : PlaceActionLst, PlaceColour : PlayerColor) -> tuple[Board, bool] :
+  """
+  This function is hyperoptimised,
+  so don't worry if it looks needlessly complicated
+  
+  """
+
+  board = qcopy(original_board)
+
+  didElim = False
+  for place in placeActionLst :
+     for coord in place.coords :
+        
+        if coord in board.keys() :
+           board, didElimThisTime = removeRowsAndColumnsOnCoord(coord, board)
+           if didElimThisTime : didElim = True
+           
+        board[coord] = PlaceColour
+
+
+  
+  (board, didElimThisTime) = boardEliminateFilledRowsOrColumns(board)
+  if didElimThisTime : didElim = True
+
+  return (board, didElim)
+
+
+
+def deriveBoardBruteForce(original_board : Board, PlaceActionLst : PlaceActionLst, PlaceColour : PlayerColor) -> tuple[Board, bool] :
+
+  board = qcopy(original_board)
+
+  didElim = False
   
   for place in PlaceActionLst :
      for coord in place.coords :
-        
-        if(coord in board.keys()) :  # all spaces should be empty
-          board = boardEliminateFilledRowsOrColumns(board)[0] # unless elim
-          #assert(not coord in board.keys())
-
+                
         board[coord] = PlaceColour
-
-  # TODO
-  # return board
+        (board, didElimThisTime) = boardEliminateFilledRowsOrColumns(board)
+        if didElimThisTime : didElim = True
         
-  return boardEliminateFilledRowsOrColumns(board)
+  return (board, didElim)
+
+
+
 
 
 
@@ -1980,9 +2029,6 @@ assert(wrappingIndexDistance(3, 6) == 3)
 
 
 
-
-
-
 # COMP30024 Artificial Intelligence, Semester 1 2024
 # Project Part B: Game Playing Agent
 
@@ -2001,6 +2047,7 @@ C = 0.01 # from Upper Confidence Bound formula
 ITERATIONS = 50
 EXPLORE_MIN = 13
 BRANCHING_FACTOR = 5
+VALIDATE = False
 
 
 from typing import Optional
@@ -2030,15 +2077,49 @@ Player = PlayerColor
 
 
 
+def numColumnsAndRowsOccupied(board : Board, player : PlayerColor) :
 
-def heuristic(state : State, action : Action, player : Player) -> float :
+
+  rows = set()
+  columns = set()
+
+  for item in board.items() :
+     
+     p : PlayerColor = item[1]
+     if p == player :
+        coord : Coord = item[0]
+
+        rows.add(coord.r)
+        columns.add(coord.c)
+
+  return len(rows) + len(columns)
+        
+
+     
+
+
+
+
+
+def heuristic(stateBeforeAction : State, action : Action, player : Player) -> float :
   # used to pick which value to expand
   # this is much better than expanding randomly
 
   # TODO in actual game implimentation, make this the number of columns and rows that the color is in
 
-  counts = Counter(state.values())
-  return counts[player] - counts[reversePlayer(player)]
+
+  reversedPlayer = reversePlayer(player)
+  stateAfterAction : Board = deriveBoardWrapper(stateBeforeAction, [action], player)[0]
+
+  # 
+  counts = Counter(stateAfterAction.values())
+  heuristicSquareCountDifference = counts[player] - counts[reversedPlayer]
+
+  #
+  heuristicRowsAndColumnsOccupiedDifferent = numColumnsAndRowsOccupied(stateAfterAction, player) - numColumnsAndRowsOccupied(stateAfterAction, reversedPlayer)
+
+  #
+  return heuristicSquareCountDifference + 0.1 * heuristicRowsAndColumnsOccupiedDifferent
 
 
 def isStateWin(state : State) -> Optional[Player] :
@@ -2092,7 +2173,7 @@ def getActionsFromState(state : State, PlaceColour : PlayerColor, isFirstMove : 
 
 
 def applyActionToState(state : State, action : Action, PlaceColour : PlayerColor) -> State :
-  return deriveBoard(state, [action], PlaceColour)[0]
+  return deriveBoardWrapper(state, [action], PlaceColour)[0]
 
 def rolloutStrategy(state : State, player: Player) -> Optional[Action] :
   possibleActions = getActionsFromState(state, player, False)
@@ -2112,6 +2193,42 @@ def rolloutStrategy(state : State, player: Player) -> Optional[Action] :
 
 # ================================================================================
 # impliment functions
+
+
+
+
+
+
+# used to benchmark different implimentations
+def deriveBoardWrapper(original_board : Board, placeActionLst : PlaceActionLst, PlaceColour : PlayerColor) -> tuple[Board, bool] :
+
+
+  # call all functions once for cprofile
+  result = deriveBoard(original_board, placeActionLst, PlaceColour)
+ 
+
+
+  if VALIDATE :
+
+    bf_result = deriveBoardBruteForce(original_board, placeActionLst, PlaceColour)
+
+    valid = (bf_result == result) 
+
+    if not valid :
+
+      print("DERIVE BOARD IS NOT VALID")
+      print(len(placeActionLst))
+
+      print(render_board(bf_result[0]))
+      print(render_board(result[0]))
+
+      print(bf_result[1])
+      print(result[1])
+      print()
+
+      assert(False)
+
+  return result
 
 
 
@@ -2261,7 +2378,7 @@ def makeMoveWith(initState : State, tree : GameTree, playerNotWhosMove: Player, 
   leafActions = getActionsFromState(leafState, whosMoveNotPlayer, isFirstMove)
 
   def heuristicFromAction(action : Action) :
-    return heuristic(state=leafState, action=action, player=whosMoveNotPlayer)
+    return heuristic(stateBeforeAction=leafState, action=action, player=whosMoveNotPlayer)
 
   leafActions.sort(key=heuristicFromAction, reverse=True)
 
@@ -2442,7 +2559,7 @@ class Agent:
         turn. You should use it to update the agent's internal game state. 
         """
 
-        self.board_state = deriveBoard(self.board_state, [action], color)[0]
+        self.board_state = deriveBoardWrapper(self.board_state, [action], color)[0]
         
 
 
