@@ -283,7 +283,7 @@ def fillColumnOrRowCompileTime(index : int, isColumn : bool) -> set[Coord] :
   else :
 
     def iterToRowCoord(i : int) :
-      return Coord(r=i, c=index)
+      return Coord(r=index, c=i)
 
     l = map(iterToRowCoord, BOARD_ITER)
 
