@@ -304,23 +304,29 @@ def fillColumnOrRow(index : int, isColumn : bool) -> set[Coord] :
   return result
 
 
+def removeCoords(board : Board, coords : set[Coord]) -> Board :
+    for key in coords :
+      board.pop(key, None)
+  
+    return board
+
 def checkAndRemoveColumnOrRowFilled(board : Board, index : int, isColumn : bool) -> tuple[Board, bool] :
 
   line : set[Coord] = fillColumnOrRow(index, isColumn)
 
-  lineRemainder : set[Coord] = line - set(board.keys())
+  lineRemainder : set[Coord] = line - board.keys()
   isLineFilled : bool = len(lineRemainder) == 0
-  didElim = isLineFilled
 
   if (isLineFilled) :
-    for key in line :
-      board.pop(key, None)
+     board = removeCoords(board, line)
 
-  return (board, didElim)
+  return (board, isLineFilled) # board, didElim
 
 
 # DON'T USE TOO INEFFICIENT
 def boardEliminateFilledRowsOrColumns(board : Board) -> tuple[Board, bool] :
+
+  # TODO you can optimise this a lot with subset logic
 
   didElim = False
   for b in [True, False] :
@@ -617,7 +623,7 @@ def removeRowsAndColumnsOnCoord(coord : Coord , board : Board) -> tuple[Board, b
     didElim = max(didElim, didElimThisTime)
 
     return (board, didElim)
-   
+
 
 def deriveBoard(original_board : Board, placeActionLst : PlaceActionLst, PlaceColour : PlayerColor) -> tuple[Board, bool] :
   """
@@ -640,6 +646,7 @@ def deriveBoard(original_board : Board, placeActionLst : PlaceActionLst, PlaceCo
 
 
   
+
   (board, didElimThisTime) = boardEliminateFilledRowsOrColumns(board)
   if didElimThisTime : didElim = True
 
@@ -2061,7 +2068,7 @@ C = 0.01 # from Upper Confidence Bound formula
 ITERATIONS = 50
 EXPLORE_MIN = 13
 BRANCHING_FACTOR = 5
-VALIDATE = False
+VALIDATE = True
 
 
 from typing import Optional
@@ -2090,25 +2097,36 @@ Negative if negative
 Player = PlayerColor
 
 
+# which coords
 
-def numColumnsAndRowsOccupied(board : Board, player : PlayerColor) :
-
+def columnsAndRowsOccupied(coords : Iterable[Coord]) :
 
   rows = set()
   columns = set()
 
-  for item in board.items() :
-     
-     p : PlayerColor = item[1]
-     if p == player :
-        coord : Coord = item[0]
+  for coord in coords :
+    rows.add(coord.r)
+    columns.add(coord.c)
 
-        rows.add(coord.r)
-        columns.add(coord.c)
+  return (rows, columns)
 
-  return len(rows) + len(columns)
-        
+def columnsAndRowsOccupied_WithColour(board : Board, player : PlayerColor) :
 
+  coords = list(map(lambda x : x[0], filter(lambda x : x[1] == player, board.items())))
+  return columnsAndRowsOccupied(coords)
+
+# number
+
+def numColumnsAndRowsOccupied__WithoutColour(board : Board) :
+
+  occupied = columnsAndRowsOccupied(list(board.keys()))
+  return len(occupied[0]) + len(occupied[1])
+
+
+def numColumnsAndRowsOccupied__WithColour(board : Board, player : PlayerColor) :
+
+  occupied = columnsAndRowsOccupied_WithColour(board, player)
+  return len(occupied[0]) + len(occupied[1])
      
 
 
@@ -2130,7 +2148,7 @@ def heuristic(stateBeforeAction : State, action : Action, player : Player) -> fl
   heuristicSquareCountDifference = counts[player] - counts[reversedPlayer]
 
   #
-  heuristicRowsAndColumnsOccupiedDifferent = numColumnsAndRowsOccupied(stateAfterAction, player) - numColumnsAndRowsOccupied(stateAfterAction, reversedPlayer)
+  heuristicRowsAndColumnsOccupiedDifferent = numColumnsAndRowsOccupied__WithColour(stateAfterAction, player) - numColumnsAndRowsOccupied__WithColour(stateAfterAction, reversedPlayer)
 
   #
   return heuristicSquareCountDifference + 0.1 * heuristicRowsAndColumnsOccupiedDifferent
