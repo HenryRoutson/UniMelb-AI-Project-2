@@ -331,7 +331,13 @@ def removeRowOrColumnFromBoard(board : Board, index : int, isColumn : bool) -> B
 
     if not (len(line - board.keys()) == 0) :
       print()
-      print(line, board.keys(), isColumn)
+
+      d = dict()
+      for c in line : d[c] = PlayerColor.RED
+
+      print(render_board(d))
+      print(render_board(board))
+      print(line, isColumn)
       assert(False)
 
   board = removeCoords(board, line)
