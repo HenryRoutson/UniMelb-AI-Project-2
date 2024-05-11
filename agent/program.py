@@ -300,7 +300,7 @@ FILLED_COLUMNS_AND_ROW_SETS = [
 def fillColumnOrRow(index : int, isColumn : bool) -> set[Coord] :
 
   result = FILLED_COLUMNS_AND_ROW_SETS[isColumn][index]
-  #assert(result == fillColumnOrRowCompileTime(index, isColumn))
+  #assert(result == fillColumnOrRowCompileTime(index, isColumn)) 
   return result
 
 
@@ -313,6 +313,7 @@ def removeCoords(board : Board, coords : set[Coord]) -> Board :
 
 def removeRowOrColumnFromBoard(board : Board, index : int, isColumn : bool) -> Board:
   line : set[Coord] = fillColumnOrRow(index, isColumn)
+  assert(len(line - board.keys()) == 0) #TODO
   board = removeCoords(board, line)
   return board
 
@@ -334,15 +335,13 @@ def checkAndRemoveColumnOrRowFilled(board : Board, index : int, isColumn : bool)
 
 def boardEliminateFilledRowsOrColumnsWrapper(board : Board) -> tuple[Board, bool] :
 
-
-  fast = boardEliminateFilledRowsOrColumns(board)
-  
   if VALIDATE :
     
     fast = boardEliminateFilledRowsOrColumns(qcopy(board))
     slow = boardEliminateFilledRowsOrColumnsOld(qcopy(board))
     assert(slow == fast)
 
+  fast = boardEliminateFilledRowsOrColumns(board)
   return fast
 
 
@@ -741,7 +740,7 @@ def deriveBoardBruteForce(original_board : Board, PlaceActionLst : PlaceActionLs
      for coord in place.coords :
                 
         board[coord] = PlaceColour
-        (board, didElimThisTime) = boardEliminateFilledRowsOrColumnsWrapper(board)
+        (board, didElimThisTime) = boardEliminateFilledRowsOrColumnsOld(board)
         if didElimThisTime : didElim = True
         
   return (board, didElim)
@@ -2259,7 +2258,7 @@ def getActionsFromState(state : State, PlaceColour : PlayerColor, isFirstMove : 
   if not isFirstMove : 
     actions = placeActionsFromBoard(state, PlaceColour)
   
-    return actions
+    return list(actions)
 
   else :
 
@@ -2311,13 +2310,12 @@ def rolloutStrategy(state : State, player: Player) -> Optional[Action] :
 # used to benchmark different implimentations
 def deriveBoardWrapper(original_board : Board, placeActionLst : PlaceActionLst, PlaceColour : PlayerColor) -> tuple[Board, bool] :
 
-
   # call all functions once for cprofile
-  result = deriveBoard(original_board, placeActionLst, PlaceColour)
 
   if VALIDATE :
 
-    bf_result = deriveBoardBruteForce(original_board, placeActionLst, PlaceColour)
+    bf_result = deriveBoardBruteForce(qcopy(original_board), placeActionLst, PlaceColour)
+    result = deriveBoard(qcopy(original_board), placeActionLst, PlaceColour)
 
     valid = (bf_result == result) 
 
@@ -2339,6 +2337,7 @@ def deriveBoardWrapper(original_board : Board, placeActionLst : PlaceActionLst, 
 
       assert(False)
 
+  result = deriveBoard(original_board, placeActionLst, PlaceColour)
   return result
 
 
@@ -2539,7 +2538,7 @@ def UCB(Parent_n : GameTree, n : GameTree) :
   assert(n in Parent_n.children)
   return (U(n) / N(n)) + C * math.sqrt(math.log(N(Parent_n), 2) / N(n))
 
-def mcts(player : Player, fromState : State, isFirstMove : bool, iterations) -> Action :
+def mcts(player : Player, fromState : State, isFirstMove : bool, iterations : int) -> Action :
 
   gameTree = GameTree([], (0,0), None) # starting node
   for _ in range(iterations) :
@@ -2557,6 +2556,22 @@ def mcts(player : Player, fromState : State, isFirstMove : bool, iterations) -> 
 
 
 
+def random_moves(player : Player, fromState : State, isFirstMove : bool) -> Action :
+
+  actions = getActionsFromState(fromState, player, isFirstMove)
+  return actions[0]
+
+
+
+def greedy_moves(player : Player, fromState : State, isFirstMove : bool) -> Action :
+
+  def heuristicFromAction(action : Action) :
+    return heuristic(stateBeforeAction=fromState, action=action, player=player)
+
+  actions = getActionsFromState(fromState, player, isFirstMove)
+  actions.sort(key=heuristicFromAction, reverse=True)
+
+  return actions[0]
 
 
 
@@ -2632,9 +2647,14 @@ class Agent:
         # the initial moves of the game, so you should use some game playing
         # technique(s) to determine the best action to take.
 
-        def action_mcts() :
-           return mcts(self._color, self.board_state, iterations=ITERATIONS, isFirstMove=self.firstMove)
+        def get_action() :
+           
+          # if branching factor is too high, be quick and greedy
+          if len(self.board_state) < 1000 :
+            return greedy_moves(self._color, self.board_state, isFirstMove=self.firstMove)
 
+          # if the branching factor is low, think ahead
+          return mcts(self._color, self.board_state, iterations=ITERATIONS, isFirstMove=self.firstMove)
 
 
         IS_PROFILE = True
@@ -2647,14 +2667,14 @@ class Agent:
               
               print("Print stats")
               
-              action = action_mcts()
+              action = get_action()
               
               pr.print_stats(sort='cumulative')
               print("end print stats")
         
         else : 
               
-              action = action_mcts()
+              action = get_action()
            
 
         gc.collect() # reduce memory usage
