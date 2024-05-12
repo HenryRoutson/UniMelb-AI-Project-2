@@ -590,7 +590,7 @@ def overLap(place : PlaceAction ,coord : Coord) :
 def printBoardPlaceAction(placeActions : list[PlaceAction], PlaceColour : PlayerColor) :
   print(render_board(deriveBoardBruteForce({}, placeActions, PlaceColour)[0]))
 
-def coordPlaceOptions(board : Board, around : Coord) -> list[PlaceAction]:
+def coordPlaceOptions(board : Board, around : Coord) -> Iterable[PlaceAction]:
   # all place actions around the around coord
 
   """
@@ -631,7 +631,7 @@ def coordPlaceOptions(board : Board, around : Coord) -> list[PlaceAction]:
   placements_adj_to_around = map(makeGeneratedAdjacentToAround, GENERATED_PIECE_PLACEMENTS)
   options = filter(filterByBoardSquaresBeingEmpty, placements_adj_to_around)
 
-  return list(options)
+  return options
   
   
 
@@ -641,11 +641,9 @@ def placeActionsFromBoard(board : Board, PlaceColour : PlayerColor) -> Iterable[
   neighbors = set()
 
   for coord in getCoordsOfColour(board, PlaceColour) :
-    for placeActionNeighbor in coordPlaceOptions(board, coord):
-      neighbors.add(placeActionNeighbor)
+    neighbors.update(coordPlaceOptions(board, coord))
 
-  ret : PlaceActionLst = list(neighbors)
-  return ret
+  return neighbors
 
 
 
@@ -2106,7 +2104,7 @@ State = Board
 MAX_DEPTH = 3
 START_STATE = {} # empty board
 
-DEBUG = True
+DEBUG = False
 C = 0.01 # from Upper Confidence Bound formula
 
 # These two numbers should increase together
@@ -2221,13 +2219,13 @@ for x in range(BOARD_N) :
       allCoords.append(Coord(x,y))
 
 
-def getActionsFromState(state : State, PlaceColour : PlayerColor, isFirstMove : bool) -> list[Action] :
+def getActionsFromState(state : State, PlaceColour : PlayerColor, isFirstMove : bool) -> Iterable[Action] :
 
 
   if not isFirstMove : 
     actions = placeActionsFromBoard(state, PlaceColour)
   
-    return list(actions)
+    return actions
 
   else :
 
@@ -2243,7 +2241,7 @@ def getActionsFromState(state : State, PlaceColour : PlayerColor, isFirstMove : 
 
       assert(len(actions) != 0)
 
-      return list(actions)
+      return actions
 
 
 
@@ -2257,7 +2255,7 @@ def rolloutStrategy(state : State, player: Player) -> Optional[Action] :
   if possibleActions == [] :
      return None
 
-  action = random.choice(possibleActions) # radom rollout deals with running out of space
+  action = random.choice(list(possibleActions)) # radom rollout deals with running out of space
   return action
 
 
@@ -2427,7 +2425,7 @@ def makeMoveWith(initState : State, tree : GameTree, playerNotWhosMove: Player, 
 
   # 2 Expansion (add a single node)
   leafNode = path[-1]
-  leafActions = getActionsFromState(leafState, whosMoveNotPlayer, isFirstMove)
+  leafActions = list(getActionsFromState(leafState, whosMoveNotPlayer, isFirstMove))
 
   def heuristicFromAction(action : Action) :
     return heuristic(stateBeforeAction=leafState, action=action, player=whosMoveNotPlayer)
@@ -2499,7 +2497,7 @@ def mcts(player : Player, fromState : State, isFirstMove : bool, iterations : in
 def random_moves(player : Player, fromState : State, isFirstMove : bool) -> Action :
 
   actions = getActionsFromState(fromState, player, isFirstMove)
-  return random.choice(actions)
+  return random.choice(list(actions))
 
 
 
@@ -2508,10 +2506,10 @@ def greedy_moves(player : Player, fromState : State, isFirstMove : bool) -> Acti
   def heuristicFromAction(action : Action) :
     return heuristic(stateBeforeAction=fromState, action=action, player=player)
 
-  actions = getActionsFromState(fromState, player, isFirstMove)
+  actions = list(getActionsFromState(fromState, player, isFirstMove))
   actions.sort(key=heuristicFromAction, reverse=True)
 
-  return actions[0]
+  return list(actions)[0]
 
 
 
