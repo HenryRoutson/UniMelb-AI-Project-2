@@ -2196,6 +2196,14 @@ def subTop3numberOfCoordsInColumnAndRows(board : Board, player : Player) -> int 
   (col_counts, row_counts) = numberOfCoordsInColumnAndRows(coords)
   allCounts = col_counts + row_counts
   return sum(sorted(allCounts, reverse=True)[:3])
+
+
+
+
+def playerSquareBias(board : Board, player : Player) -> int :
+
+  counts = Counter(board.values())
+  return counts[player] - counts[reversePlayer(player)]
    
 
 def heuristic(stateBeforeAction : State, action : Action, player : Player) -> float :
@@ -2209,10 +2217,8 @@ def heuristic(stateBeforeAction : State, action : Action, player : Player) -> fl
 
   if isElim :
   
-    counts = Counter(stateAfterAction.values())
-    heuristicSquareCountDifference = counts[player] - counts[reversedPlayer]
-
-    #heuristic_value += heuristicSquareCountDifference * -1000 # if there is the possibility to eliminate, this should be important
+    heuristicSquareCountDifference = playerSquareBias(stateAfterAction, player)
+    heuristic_value += heuristicSquareCountDifference * -1000 # if there is the possibility to eliminate, this should be important
 
   eliminationPrevention = - subTop3numberOfCoordsInColumnAndRows(stateAfterAction, player) + subTop3numberOfCoordsInColumnAndRows(stateAfterAction, reversedPlayer)
   heuristic_value += eliminationPrevention
@@ -2618,8 +2624,12 @@ class Agent:
         else : 
               
               action = get_action()
-           
 
+
+        # if a good move, you won't eliminate more of your own pieces
+        assert(playerSquareBias(deriveBoard(self.board_state, [action], self._color)[0], self._color) >= playerSquareBias(self.board_state, self._color)) 
+
+           
         gc.collect() # reduce memory usage
         self.firstMove = False
         return action
