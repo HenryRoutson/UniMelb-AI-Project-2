@@ -2160,41 +2160,65 @@ def columnsAndRowsOccupied_WithColour(board : Board, player : PlayerColor) :
 
 # number
 
-def numColumnsAndRowsOccupied__WithoutColour(board : Board) :
 
-  occupied = columnsAndRowsOccupied(list(board.keys()))
-  return len(occupied[0]) + len(occupied[1])
-
-
-def numColumnsAndRowsOccupied__WithColour(board : Board, player : PlayerColor) :
+def mulColumnsAndRowsOccupied__WithColour(board : Board, player : PlayerColor) :
 
   occupied = columnsAndRowsOccupied_WithColour(board, player)
-  return len(occupied[0]) + len(occupied[1])
+
+  # multi used to avoid concentration on a single axis and line elims
+  return len(occupied[0]) * len(occupied[1])
      
 
 
 
 
+def coordsInBoardOfPlayer(board : Board, player : Player) -> Iterable[Coord] :
+   return map(lambda item : item[0], filter(lambda item : item[1] == player, board.items()))
+
+def numberOfCoordsInColumnAndRows(coords : Iterable[Coord]) -> tuple[list, list] :
+  # filter board by player coords
+  # then the number is just len
+
+  row_counts = [0]*BOARD_N
+  col_counts = [0]*BOARD_N
+
+  for coord in coords :
+     row_counts[coord.r] += 1
+     col_counts[coord.c] += 1
+
+  return (col_counts, row_counts)
+  
+
+
+def subTop3numberOfCoordsInColumnAndRows(board : Board, player : Player) -> int :
+
+  coords = coordsInBoardOfPlayer(board, player)
+  (col_counts, row_counts) = numberOfCoordsInColumnAndRows(coords)
+  allCounts = col_counts + row_counts
+  return sum(sorted(allCounts, reverse=True)[:3])
+   
 
 def heuristic(stateBeforeAction : State, action : Action, player : Player) -> float :
   # used to pick which value to expand
   # this is much better than expanding randomly
 
-  # TODO in actual game implimentation, make this the number of columns and rows that the color is in
-
+  heuristic_value = 0
 
   reversedPlayer = reversePlayer(player)
-  stateAfterAction : Board = deriveBoardWrapper(stateBeforeAction, [action], player)[0]
+  stateAfterAction, isElim = deriveBoardWrapper(stateBeforeAction, [action], player)
 
-  # 
-  counts = Counter(stateAfterAction.values())
-  heuristicSquareCountDifference = counts[player] - counts[reversedPlayer]
+  if isElim :
+  
+    counts = Counter(stateAfterAction.values())
+    heuristicSquareCountDifference = counts[player] - counts[reversedPlayer]
 
-  #
-  heuristicColumnsAndRowsOccupiedDifferent = numColumnsAndRowsOccupied__WithColour(stateAfterAction, player) - numColumnsAndRowsOccupied__WithColour(stateAfterAction, reversedPlayer)
+    #heuristic_value += heuristicSquareCountDifference * -1000 # if there is the possibility to eliminate, this should be important
 
-  #
-  return heuristicSquareCountDifference + 0.1 * heuristicColumnsAndRowsOccupiedDifferent
+  eliminationPrevention = - subTop3numberOfCoordsInColumnAndRows(stateAfterAction, player) + subTop3numberOfCoordsInColumnAndRows(stateAfterAction, reversedPlayer)
+  heuristic_value += eliminationPrevention
+
+  return heuristic_value
+
 
 
 def isStateWin(state : State) -> Optional[Player] :
@@ -2509,7 +2533,7 @@ def greedy_moves(player : Player, fromState : State, isFirstMove : bool) -> Acti
   actions = list(getActionsFromState(fromState, player, isFirstMove))
   actions.sort(key=heuristicFromAction, reverse=True)
 
-  return list(actions)[0]
+  return list(actions)[0] # can be an error here if no moves, this is fine
 
 
 
@@ -2568,14 +2592,15 @@ class Agent:
         def get_action() :
            
           # if branching factor is too high, be quick and greedy
-          if len(self.board_state) < 10 :
+
+          if len(self.board_state) < 400000 :
             return greedy_moves(self._color, self.board_state, isFirstMove=self.firstMove)
 
           # if the branching factor is low, think ahead
           return mcts(self._color, self.board_state, iterations=ITERATIONS, isFirstMove=self.firstMove)
 
 
-        IS_PROFILE = True
+        IS_PROFILE = False
 
         if IS_PROFILE :
 

@@ -1,7 +1,15 @@
 
 
 
-try mcts, use greedy if fails
+
+why tf are the eliminations so stupid
+
+
+
+switch to min max
+
+
+
 
 
 
