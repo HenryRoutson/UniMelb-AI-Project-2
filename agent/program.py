@@ -2535,26 +2535,6 @@ class Agent:
 
 
 
-        """
-
-        def profile_test() :
-          mcts(PlayerColor.BLUE, { }, iterations=ITERATIONS, isFirstMove=True)
-
-        import cProfile
-        with cProfile.Profile() as pr:
-            print("Print stats")
-            profile_test()
-            pr.print_stats(sort='cumulative')
-            print("end print stats")
-
-        """
-
-
-        
-
-
-
-
         # bruh
         def PlayerColorFromString(s) -> PlayerColor :
           if str(s) == "RED" : return PlayerColor.RED

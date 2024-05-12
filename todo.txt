@@ -5,6 +5,25 @@ try mcts, use greedy if fails
 
 
 
+
+
+
+
+
+
+need to do way more iterations
+
+
+
+
+
+
+
+need to do a more accurate backprop than 1 or 0 with win or lose, do heuristic
+winning in less moves should be a higher score
+losing in less moves should be a lower score
+
+
 try to limit depth
 
 
