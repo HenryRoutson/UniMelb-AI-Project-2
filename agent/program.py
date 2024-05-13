@@ -2629,6 +2629,7 @@ class Agent:
         # if a good move, you won't eliminate more of your own pieces
         if not (playerSquareBias(deriveBoard(self.board_state, [action], self._color)[0], self._color) >= playerSquareBias(self.board_state, self._color))  :
            
+          print(heuristic(self.board_state, action, self._color))
           print(render_board(self.board_state))
           print(render_board(deriveBoard(self.board_state, [action], self._color)[0]))
           print(self._color)

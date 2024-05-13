@@ -1,6 +1,9 @@
 
 
 
+try submitting greedy search
+debug moves being shit
+
 
 why tf are the eliminations so stupid
 
