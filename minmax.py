@@ -81,39 +81,8 @@ def rolloutStrategy(state : State, player: Player) :
 
 
 
-
-
-
-
-
-
 # ================================================================================
 # impliment functions
-
-
-
-
-class GameTree : # / node
-
-  def __init__(self, children : list, winProp : WinsAndGames, action : Optional[Action]) -> None:
-    self.children : list[GameTree] = children
-    self.winProp : WinsAndGames = winProp # win proportion
-    self.action = action 
-    # state is derived, as it takes too much space
-
-
-def printTree(whosMove : Player, tree : GameTree, state : State, toIndent = 100, indent = 0, ) :
-  if indent > toIndent : return
-
-  print("    "*indent + "action : " + str(tree.action) + ", winprop :" + str(tree.winProp) + "fract" + str(tree.winProp[0] / (tree.winProp[1] + 0.01))[1:4] + ", state : " + str(state)) # TODO add state
-  for t in tree.children :
-    printTree(tree=t, state = applyActionToState(state=state, action =t.action, whosMove=whosMove), indent=(indent + 1), toIndent=toIndent, whosMove=reversePlayer(whosMove))
-
-
-Children = list[GameTree]
-Path = list[GameTree]
-
-# functions =====
 
 
 def reversePlayer(player : Player) -> Player :
@@ -146,11 +115,6 @@ def whosMoveFromDepth(depth : int, playing : Player) -> Player :
 
 playing_player = PLAYER1
 INF = float("inf")
-START_TREE = GameTree(children=[], winProp=(1,1),action=None)
-
-
-
-
 
 
 def min_max_helper(isMax : bool, toDepth : int, state : State, depth : int, whosMove : Player)  -> tuple[Optional[Action], float] :
