@@ -8,6 +8,8 @@ debug moves being shit
 why tf are the eliminations so stupid
 
 
+reduce branching factor, get rid of some branches
+
 
 switch to min max
 

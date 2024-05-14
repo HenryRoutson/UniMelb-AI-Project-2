@@ -2108,7 +2108,7 @@ DEBUG = False
 C = 0.01 # from Upper Confidence Bound formula
 
 # These two numbers should increase together
-ITERATIONS = 50
+ITERATIONS = 500
 EXPLORE_MIN = 1
 BRANCHING_FACTOR = 5
 VALIDATE = True
@@ -2510,6 +2510,7 @@ def mcts(player : Player, fromState : State, isFirstMove : bool, iterations : in
 
   gameTree = GameTree([], (0,0), None) # starting node
   for _ in range(iterations) :
+    print("mcts iteration")
     gameTree = makeMoveWith(fromState, gameTree, player, isFirstMove)
     if DEBUG :
       print("Tree")
@@ -2599,7 +2600,7 @@ class Agent:
            
           # if branching factor is too high, be quick and greedy
 
-          if len(self.board_state) < 400000 :
+          if len(self.board_state) < 85 :
             return greedy_moves(self._color, self.board_state, isFirstMove=self.firstMove)
 
           # if the branching factor is low, think ahead
@@ -2627,6 +2628,8 @@ class Agent:
 
 
         # if a good move, you won't eliminate more of your own pieces
+
+        """
         if not (playerSquareBias(deriveBoard(self.board_state, [action], self._color)[0], self._color) >= playerSquareBias(self.board_state, self._color))  :
            
           print(heuristic(self.board_state, action, self._color))
@@ -2635,6 +2638,8 @@ class Agent:
           print(self._color)
           assert(False)
            
+        """
+        
         gc.collect() # reduce memory usage
         self.firstMove = False
         return action
