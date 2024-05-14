@@ -68,7 +68,10 @@ def tieBreaker(state : State) -> Player :
 
 
 def getActionsFromState(state : State, player : Player) -> list[Action] :
-  return [2, 1, -1, -2] 
+  x = [2, 1, -1, -2]
+  random.shuffle(x)
+  return x
+
 
 def applyActionToState(state : State, action : Optional[Action], whosMove : Player) -> State :
 
@@ -113,44 +116,57 @@ def whosMoveFromDepth(depth : int, playing : Player) -> Player :
 # https://www.youtube.com/watch?v=l-hh51ncgDI
 
 
-playing_player = PLAYER1
+
 INF = float("inf")
 
 
-def min_max_helper(isMax : bool, toDepth : int, state : State, depth : int, whosMove : Player)  -> tuple[Optional[Action], float] :
-
-      (best_action, best_score) = (None, -INF if isMax else INF)
-      min_or_max_f = max if isMax else min
-
-      for action in getActionsFromState(state, whosMove) :
-        result = min_max(toDepth = toDepth, state = state, depth = depth + 1, action=action)
-        (action, score) = result
-
-        if (min_or_max_f(score, best_score) != best_score) :
-          (best_action, best_score) = result
-
-      return (best_action, best_score)
+def min_max(playing_player : Player, toDepth : int, state : State = START_STATE) :
 
 
-def min_max(toDepth : int, state : State = START_STATE, action : Optional[Action] = None, depth : int = 1) -> tuple[Optional[Action], float] :
-  print("depth :", depth)
+  def min_max_helper(isMax : bool, toDepth : int, state : State, depth : int, whosMove : Player, alpha : float, beta : float)  -> tuple[Optional[Action], float] :
 
-  # calculate new state
-  whosMove = whosMoveFromDepth(depth, playing_player)
-  state = applyActionToState(state, action, whosMove)
+        (best_action, best_score) = (None, -INF if isMax else INF)
+        min_or_max_f = max if isMax else min
 
-  # base case
-  if depth == toDepth : 
-    return (action, heuristic(state, playing_player))
+        for action in getActionsFromState(state, whosMove) :
+          result = min_max_sub(toDepth = toDepth, state = state, depth = depth + 1, action=action)
+          (action, score) = result
 
-  # min or max case
-  isMax = (whosMove == playing_player)
-  result = min_max_helper(isMax=isMax, toDepth=toDepth, state=state, depth=depth, whosMove=whosMove)
+          if (min_or_max_f(score, best_score) != best_score) :
+            (best_action, best_score) = result
 
-  #
-  return result
+          # Alpha beta pruning
+          if isMax :
+            alpha = max(alpha, score)
+          else :
+            beta = min(beta, score)
+
+          if (beta <= alpha) : break
+          # 
+
+        return (best_action, best_score)
 
 
+  def min_max_sub(toDepth : int, state : State = START_STATE, action : Optional[Action] = None, depth : int = 1, alpha : float = -INF, beta : float = INF) -> tuple[Optional[Action], float] :
+    print("depth :", depth)
+
+    # calculate new state
+    whosMove = whosMoveFromDepth(depth, playing_player)
+    state = applyActionToState(state, action, whosMove)
+
+    # base case
+    if depth == toDepth : 
+      return (action, heuristic(state, playing_player))
+
+    # min or max case
+    isMax = (whosMove == playing_player)
+    result = min_max_helper(isMax=isMax, toDepth=toDepth, state=state, depth=depth, whosMove=whosMove, alpha= alpha, beta= beta)
+
+    #
+    return result
+
+
+  return min_max_sub(toDepth=toDepth, state=state, action=None, depth=1, alpha=-INF, beta=INF)
 
 
 
@@ -167,4 +183,4 @@ def min_max(toDepth : int, state : State = START_STATE, action : Optional[Action
 # ================================================================================
 # call code
 
-print(min_max(4))
+print(min_max(toDepth=4, playing_player=PLAYER1))
