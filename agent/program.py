@@ -539,8 +539,7 @@ def isSquareEmpty(coord : Coord, board : Board) -> bool :
 
 def isPiecePlaceSquaresEmpty(place : PlaceAction, board : Board) -> bool :
 
-  for c in list(place.coords) : 
-    squareCoord : Coord = c
+  for squareCoord in place.coords : 
     if not isSquareEmpty(squareCoord, board) :
        return False
     
@@ -606,10 +605,10 @@ def coordPlaceOptions(board : Board, through : Coord) -> Iterable[PlaceAction]:
   def filterByBoardSquaresBeingEmpty(placemnt : PlaceAction) :
      return isPiecePlaceSquaresEmpty(placemnt, board)
 
-  def makeGeneratedAdjacentToAround(placement : PlaceAction) :
+  def makeThrough(placement : PlaceAction) :
      return offsetPlaceAction(placement, through, CENTER) 
 
-  placements_through = map(makeGeneratedAdjacentToAround, GENERATED_PIECE_PLACEMENTS)
+  placements_through = map(makeThrough, GENERATED_PIECE_PLACEMENTS)
   options = filter(filterByBoardSquaresBeingEmpty, placements_through)
 
   return options
