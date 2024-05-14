@@ -42,16 +42,16 @@ PLAYER2 = "negative"
 State = int
 Action = int
 
-def heuristic(state : State, action : Action, player : Player) -> float :
+def heuristic(state : State, player : Player) -> float :
   # used to pick which value to expand
   # this is much better than expanding randomly
 
   # TODO in actual game implimentation, make this the number of columns and rows that the color is in
 
   if player == PLAYER1 :
-    return action #* random.random()
+    return state #* random.random()
   else :
-    return -action
+    return -state
 
 
 def isStateWin(state : State) -> Optional[Player] :
@@ -70,7 +70,9 @@ def tieBreaker(state : State) -> Player :
 def getActionsFromState(state : State, player : Player) -> list[Action] :
   return [2, 1, -1, -2] 
 
-def applyActionToState(state : State, action : Action, player : Player) -> State :
+def applyActionToState(state : State, action : Optional[Action], whosMove : Player) -> State :
+
+  if action == None : return state
   return state + action
 
 def rolloutStrategy(state : State, player: Player) :
@@ -100,14 +102,13 @@ class GameTree : # / node
     # state is derived, as it takes too much space
 
 
-def printTree(tree : GameTree, state : Optional[State], toIndent = 100, indent = 0) :
+def printTree(whosMove : Player, tree : GameTree, state : State, toIndent = 100, indent = 0, ) :
   if indent > toIndent : return
+
   print("    "*indent + "action : " + str(tree.action) + ", winprop :" + str(tree.winProp) + "fract" + str(tree.winProp[0] / (tree.winProp[1] + 0.01))[1:4] + ", state : " + str(state)) # TODO add state
   for t in tree.children :
-    tmpState = state
-    if state != None and t.action :
-      tmpState = applyActionToState(state, t.action)
-    printTree(t, tmpState, indent=(indent + 1), toIndent=toIndent)
+    printTree(tree=t, state = applyActionToState(state=state, action =t.action, whosMove=whosMove), indent=(indent + 1), toIndent=toIndent, whosMove=reversePlayer(whosMove))
+
 
 Children = list[GameTree]
 Path = list[GameTree]
@@ -142,11 +143,50 @@ def whosMoveFromDepth(depth : int, playing : Player) -> Player :
 # implimentation psuedo code
 # https://www.youtube.com/watch?v=l-hh51ncgDI
 
-def minMax(player : Player, fromState : State, isFirstMove : bool, toDepth : int = 3) -> Action :
 
-  
+playing_player = PLAYER1
+INF = float("inf")
+START_TREE = GameTree(children=[], winProp=(1,1),action=None)
 
-  return bestAction
+
+
+
+
+
+def min_max_helper(isMax : bool, toDepth : int, state : State, depth : int, whosMove : Player)  -> tuple[Optional[Action], float] :
+
+      (best_action, best_score) = (None, -INF if isMax else INF)
+      min_or_max_f = max if isMax else min
+
+      for action in getActionsFromState(state, whosMove) :
+        result = min_max(toDepth = toDepth, state = state, depth = depth + 1, action=action)
+        (action, score) = result
+
+        if (min_or_max_f(score, best_score) != best_score) :
+          (best_action, best_score) = result
+
+      return (best_action, best_score)
+
+
+def min_max(toDepth : int, state : State = START_STATE, action : Optional[Action] = None, depth : int = 1) -> tuple[Optional[Action], float] :
+  print("depth :", depth)
+
+  # calculate new state
+  whosMove = whosMoveFromDepth(depth, playing_player)
+  state = applyActionToState(state, action, whosMove)
+
+  # base case
+  if depth == toDepth : 
+    return (action, heuristic(state, playing_player))
+
+  # min or max case
+  isMax = (whosMove == playing_player)
+  result = min_max_helper(isMax=isMax, toDepth=toDepth, state=state, depth=depth, whosMove=whosMove)
+
+  #
+  return result
+
+
 
 
 
@@ -162,3 +202,5 @@ def minMax(player : Player, fromState : State, isFirstMove : bool, toDepth : int
 
 # ================================================================================
 # call code
+
+print(min_max(4))
