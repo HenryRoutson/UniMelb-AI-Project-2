@@ -352,6 +352,16 @@ def missingIndexes(s : set) -> set :
 def missingCoords(coords : Iterable[Coord]) -> set[Coord] :
   return allCoordsSet - set(coords)
 
+def columnsAndRowsOccupied(coords : Iterable[Coord]) :
+
+  rows = set()
+  columns = set()
+
+  for coord in coords :
+    rows.add(coord.r)
+    columns.add(coord.c)
+
+  return (columns, rows)
 
 def columnsAndRowsFullyOccupied(board : Board) :
 
@@ -518,35 +528,6 @@ def numSquaresToPieces(i : int) :
   return  math.ceil(i / 4) # 
 
 
-def heuristic1(derived_board : Board, placeActionLst : PlaceActionLst, target : Target, PlaceColour: PlayerColor) -> Heuristic_value | None :
-
-  ##################################################################################
-
-  current_cost = placeActionLst.__len__()
-  
-  ##################################################################################
-
-  # number of squares
-
-  remaining_squares = min(
-    minSquareCostForRowOrColumn(derived_board, target, False, PlaceColour),
-    minSquareCostForRowOrColumn(derived_board, target, True, PlaceColour),
-  )
-
-  if (remaining_squares == -1) : return None
-
-  underestimate_remaining_pieces = numSquaresToPieces(remaining_squares)
-
-  ##################################################################################
-
-  admissble = current_cost + underestimate_remaining_pieces
-  not_admissble = current_cost + remaining_squares
-
-  assert(admissble <= not_admissble)
-
-  ##################################################################################
-
-  return (admissble, not_admissble)
 
 
 def isPieceDeleted(board : Board, target : Target) -> bool : 
@@ -582,15 +563,15 @@ def coordEmptySquareNeighbors(board : Board, coord : Coord) -> list[Coord] :
   return list(filter(lambda coord : coord not in board.keys() ,coordSquareNeighbors(coord)))
 
 
+
 def overLap(place : PlaceAction ,coord : Coord) : 
   return coord in place.coords
   
 
-
 def printBoardPlaceAction(placeActions : list[PlaceAction], PlaceColour : PlayerColor) :
   print(render_board(deriveBoardBruteForce({}, placeActions, PlaceColour)[0]))
 
-def coordPlaceOptions(board : Board, around : Coord) -> Iterable[PlaceAction]:
+def coordPlaceOptions(board : Board, through : Coord) -> Iterable[PlaceAction]:
   # all place actions around the around coord
 
   """
@@ -626,25 +607,38 @@ def coordPlaceOptions(board : Board, around : Coord) -> Iterable[PlaceAction]:
      return isPiecePlaceSquaresEmpty(placemnt, board)
 
   def makeGeneratedAdjacentToAround(placement : PlaceAction) :
-     return offsetPlaceAction(placement, around, CENTER) 
+     return offsetPlaceAction(placement, through, CENTER) 
 
-  placements_adj_to_around = map(makeGeneratedAdjacentToAround, GENERATED_PIECE_PLACEMENTS)
-  options = filter(filterByBoardSquaresBeingEmpty, placements_adj_to_around)
+  placements_through = map(makeGeneratedAdjacentToAround, GENERATED_PIECE_PLACEMENTS)
+  options = filter(filterByBoardSquaresBeingEmpty, placements_through)
 
   return options
   
   
 
+
+def coordsEmpty(board : Board, coords : list[Coord]) -> list[Coord] :
+  return list(filter(lambda coord : coord not in board.keys() , coords))
+
+
+
 def placeActionsFromBoard(board : Board, PlaceColour : PlayerColor) -> Iterable[PlaceAction]:
   # return a list of all pieces you can place connecting to a placeAction
 
-  neighbors = set()
+  # TODO this could be so much faster
+  # could do it based on coords with an adjacent piece
 
+  coordsAdjToColour = set()
   for coord in getCoordsOfColour(board, PlaceColour) :
-    neighbors.update(coordPlaceOptions(board, coord))
+    coordsAdjToColour.update(coordSquareNeighbors(coord))
 
-  return neighbors
+  coordsAdjToColourAndEmpty = coordsEmpty(board, list(coordsAdjToColour))
+  
+  placeOptions = set()
+  for coord in coordsAdjToColourAndEmpty :
+   placeOptions.update(coordPlaceOptions(board, coord))
 
+  return placeOptions
 
 
 def qcopy(board : Board) -> Board :
@@ -746,106 +740,6 @@ class PlaceActionListWrapper():
 
 
 
-# int first to sort priority
-pq_Type = tuple[Heuristic_value, PlaceActionListWrapper]
-
-
-PQ_TYPE_HEURISTIC_VALUE_INDEX = 0
-PQ_TYPE_PLACE_ACTION_WRAPPER_INDEX = 1
-
-
-def pq_Type_get_PlaceActionLst(qp_type :pq_Type) -> list[PlaceAction] :
-    
-  wrapper : PlaceActionListWrapper = qp_type[PQ_TYPE_PLACE_ACTION_WRAPPER_INDEX]
-  ret : PlaceActionLst = wrapper.placeLst
-  return ret
-
-def heuristic_search(BOARD : Board, TARGET : Target, PlaceColour : PlayerColor) ->  PlaceActionLst | None :
-  """
-  Adapted from https:#en.wikipedia.org/wiki/A*_search_algorithm
-  BOARD and TARGET are contant
-  """
-
-  pq : PriorityQueue[pq_Type] = PriorityQueue()
-
-  def addToPQ_returnTrueIfSolution(placeActions : PlaceActionLst, initial_derived_board : Board) -> bool :
-     # this derived board includes an extra piece
-
-    neighbor = placeActions[-1]
-    [derived_board_plus, didElimLine] =  deriveBoard(initial_derived_board, [neighbor], PlaceColour) # include neighbor
-    
-
-    """
-    # more performant to leave out
-    froze = frozenset(derived_board_plus.items())
-    if (froze in reached) : return False # already reached
-    reached.add(froze)
-    """
-
-    
-
-    # shouldn't already be in pq
-    if not placeActions in (map(lambda x : x[1].placeLst,pq.queue)):
-
-      cost : Heuristic_value | None = heuristic1(derived_board_plus, placeActions, TARGET, PlaceColour)
-      if (cost == None) : return False # can't reach
-
-      to_put = (cost, PlaceActionListWrapper(placeActions))
-      pq.put(to_put)
-
-    if didElimLine and isPieceDeleted(derived_board_plus, TARGET) :
-
-      print("SOLUTION")
-      print(render_board(derived_board_plus, TARGET, ansi=True))
-      
-      return True
-    
-    return False
-
-
-
-    
-
-  # Add all neighbors of existing squares 
-
-  for coord in BOARD.keys() :
-    if BOARD[coord] == PlaceColour :
-      for n in coordPlaceOptions(BOARD, coord) :
-        neighbor : PlaceAction = n
-        #assert(adjacentTo(neighbor, coord))
-
-        placeAction = [neighbor]
-        if addToPQ_returnTrueIfSolution(placeAction, BOARD) :
-          return placeAction
-        
-
-
-
-
-  while not pq.empty() :
-
-    current_with_heuristic : pq_Type = pq.get(block=False)
-    current : PlaceActionLst = pq_Type_get_PlaceActionLst(current_with_heuristic)
-
-    #print("Place search")
-    #print("\ncurrent cost   : " + str(len(current)))
-    #print("heuristic cost : " + str(current_with_heuristic[PQ_TYPE_HEURISTIC_VALUE_INDEX])) 
-
-    [derived_board, didElimLine] = deriveBoard(BOARD, current, PlaceColour)
-
-    #print(render_board(derived_board, TARGET, ansi=True)) # remove for submission
-
-
-    for neighbor in placeActionsFromBoard(derived_board, PlaceColour) :
-
-        next : PlaceActionLst = current + [neighbor]
-        if addToPQ_returnTrueIfSolution(next, derived_board) :
-          return next
-
-
-  return None
-
-
 
 # TODO write render board function
 
@@ -860,12 +754,6 @@ a_star_pq_Type = tuple[int, list[Coord]]
 def coordToPlaceAction(coord : Coord ) -> PlaceAction :
   return PlaceAction(coord, coord, coord, coord)
 
-def a_star_heuristic(coord_list : list[Coord], index : int, isColumn : bool) :
-  return wrappingIndexDistance(getIndex(coord_list[-1], isColumn), index)
-
-def deriveBoardForAStar(board : Board, current : list[Coord], PlaceColour : PlayerColor) :
-  return deriveBoard(board, [coordToPlaceAction(coord) for coord in current], PlaceColour)
-
 
 def getIndex(coord : Coord, isColumn : bool) :
   if isColumn : return coord.c
@@ -873,76 +761,6 @@ def getIndex(coord : Coord, isColumn : bool) :
 
 def coordListToHashable(list : list[Coord]) :
   return ' '.join([(str(x.r) + str(x.c)) for x in list])
-
-def a_star(BOARD : Board, coords_from : list[Coord], index : int, isColumn : bool, PlaceColour : PlayerColor) ->  list[Coord] | None :
-  """
-  Adapted from https:#en.wikipedia.org/wiki/A*_search_algorithm
-  """
-
-  #print("A* A* A* A* A*")
-
-
-  pq : PriorityQueue[a_star_pq_Type] = PriorityQueue()
-  reached = set()
-
-
-  def addToPQ_returnTrueIfSolution(coord_list : list[Coord], initial_derived_board : Board) -> bool :
-     # this derived board includes an extra piece
-
-    last = coord_list[-1]
-    if (last in reached) : return False
-
-    reached.add(last)
-    
-    if getIndex(last, isColumn) == index : # adjacent to coord_to
-
-      #print("SOLUTION")
-      # TODO render board
-      
-      return True
-
-    if (not coord_list in (map(lambda x : x[1], pq.queue))) :
-      cost : int = a_star_heuristic(coord_list, index, isColumn)
-      to_put = (cost, coord_list)
-      pq.put(to_put)
-
-    return False
-
-  # Add all neighbors of existing squares 
-
-  for c in coords_from:
-    for start_move in coordEmptySquareNeighbors(BOARD, c) :
-     if addToPQ_returnTrueIfSolution([start_move], BOARD) :
-        return [start_move]
-        
-  while not pq.empty() :
-
-    current_with_heuristic : a_star_pq_Type = pq.get(block=False)
-    current : list[Coord] = current_with_heuristic[1]
-
-    #print("A*")
-    #print(index, isColumn)
-    #print("\ncurrent cost   : " + str(len(current)))
-    #print("heuristic cost : " + str(current_with_heuristic[PQ_TYPE_HEURISTIC_VALUE_INDEX])) 
-
-    [derived_board, didElimLine] = deriveBoardForAStar(BOARD, current, PlaceColour)
-    #print(render_board(derived_board, None, ansi=True)) # remove for submission
-
-    lastPlaced : Coord = current[-1]
-    for n in coordEmptySquareNeighbors(derived_board, lastPlaced) :
-      neighbor : Coord = n
-
-      next : list[Coord] = current + [neighbor]
-
-      if neighbor not in pq.queue :
-
-        if addToPQ_returnTrueIfSolution(next, derived_board) :
-          return next
-
-
-  return None
-
-
 
 
 
@@ -1028,9 +846,10 @@ def placeActionToOrderedCoords(place : PlaceAction) -> list[Coord] :
 
 def offsetPlaceAction(place : PlaceAction, add : Coord, sub : Coord) -> PlaceAction :
 
+  delta = add.__sub__(sub)
+
   # do seperatly to avoid negatives
-  coords = list(map(lambda c : c.__add__(add), place.coords))
-  coords = list(map(lambda c : c.__sub__(sub), coords))
+  coords = list(map(lambda c : c.__add__(delta), place.coords))
   return coordsToPlaceAction(coords)
 
 
@@ -1203,7 +1022,7 @@ def rotatePiece90(place : PlaceAction) -> PlaceAction :
 
   # rotate around 90
   vectors : map[Vector2] =  map(coordToVec2 ,place.coords)
-  rotatedVectors : map[Vector2]  = map(lambda c : rotateVector90(c, Vector2(0,0)), vectors)
+  rotatedVectors : list[Vector2]  = list(map(lambda c : rotateVector90(c, Vector2(0,0)), vectors))
 
   # and then move to the lowest coords
   # used to avoid out of bounds errors
@@ -1224,56 +1043,64 @@ def printPlaceAction(place : PlaceAction) :
 
   print("  ),")
 
-def allPlaceOptionsForPiecesAroundCenter(pieces : PlaceActionLst, PlaceColour : PlayerColor) -> PlaceActionLst :
+def allPlaceOptionsForPiecesThroughCenter(pieces : PlaceActionLst) -> PlaceActionLst :
   print("COMPILE TIME CODE")
 
   BOARD_WITH_CENTER = { CENTER : PlayerColor.BLUE } # visuliase the center
 
   place_options : set[frozenset[Coord]] = set() # used to avoid duplicates
 
-  for coord in coordSquareNeighbors(CENTER) :
 
-    for piece in pieces :
+  for piece in pieces :
 
-      for i in range(MAX_PIECE_SIZE) : # each of the piece of the place action
+    for i in range(MAX_PIECE_SIZE) : # each of the piece of the place action
 
-        for _ in range(4) : # covers all rotations, cache as this can be quite complex
+      for _ in range(4) : # covers all rotations, cache as this can be quite complex
 
-          piece = rotatePiece90(piece) # i don't think the rotation point should matter as long as it avoids negative numbers
-          new_piece : PlaceAction = movePlaceActionIndexToCoord(piece, i, coord)
-          if (not CENTER in new_piece.coords) : # if not overlapping
+        piece = rotatePiece90(piece) # i don't think the rotation point should matter as long as it avoids negative numbers
+        new_piece : PlaceAction = movePlaceActionIndexToCoord(piece, i, CENTER)
 
+        already_found = new_piece.coords in place_options
+        # print("already_found " + str(already_found))
 
-            already_found = new_piece.coords in place_options
-            # print("already_found " + str(already_found))
+        if (not already_found) :
 
-            if (not already_found) :
+          assert(CENTER in new_piece.coords) 
 
-              assert(adjacentTo(new_piece, CENTER)) 
+          visulising = True
+          if visulising :
 
-              visulising = False
-              if visulising :
+            print("GENERATING FOUND")
+            print("new_piece " + str(new_piece))
+            print(render_board(deriveBoard(BOARD_WITH_CENTER, [new_piece], PlayerColor.RED)[0]))
+          
+          else : # generating
 
-                print("GENERATING FOUND")
-                print("new_piece " + str(new_piece))
-                print(render_board(deriveBoard(BOARD_WITH_CENTER, [new_piece], PlaceColour)[0]))
-              
-              else : # generating
-
-                printPlaceAction(new_piece)
-                
-              place_options.add(frozenset(new_piece.coords))
+            printPlaceAction(new_piece)
+            
+          place_options.add(frozenset(new_piece.coords))
 
 
+  assert(len(place_options) != 0)
   ret : list[PlaceAction] = [ coordsToPlaceAction([crd for crd in st]) for st in place_options]
-  assert(len(ret) != 0)
   return ret
 
 
 
+def generate_GENERATED_PIECE_PLACEMENTS() :
+
+    print("GENERATED_PIECE_PLACEMENTS : list[PlaceAction] = [")
+
+    for place in allPlaceOptionsForPiecesThroughCenter(PIECES_FOR_GENERATING) :
+      printPlaceAction(place)
+
+
+    print("]")
 
 
 
+#
+#generate_GENERATED_PIECE_PLACEMENTS()
 
 
 
@@ -1290,668 +1117,306 @@ def allPlaceOptionsForPiecesAroundCenter(pieces : PlaceActionLst, PlaceColour : 
 
 # adjacent to CENTER
 GENERATED_PIECE_PLACEMENTS : list[PlaceAction] = [
-
   PlaceAction(
-   Coord(3,3),
-   Coord(3,4),
-   Coord(3,5),
-   Coord(3,6),
-  ),
-  PlaceAction(
-   Coord(3,2),
-   Coord(3,3),
-   Coord(3,4),
-   Coord(3,5),
-  ),
-  PlaceAction(
-   Coord(3,1),
-   Coord(3,2),
-   Coord(3,3),
-   Coord(3,4),
-  ),
-  PlaceAction(
-   Coord(2,4),
-   Coord(0,4),
-   Coord(3,4),
-   Coord(1,4),
-  ),
-  PlaceAction(
-   Coord(3,7),
-   Coord(3,4),
-   Coord(3,5),
-   Coord(3,6),
-  ),
-  PlaceAction(
+   Coord(4,4),
    Coord(4,5),
-   Coord(3,3),
-   Coord(3,4),
-   Coord(3,5),
+   Coord(5,5),
+   Coord(5,6),
   ),
   PlaceAction(
-   Coord(3,2),
-   Coord(3,3),
-   Coord(3,4),
-   Coord(2,2),
-  ),
-  PlaceAction(
-   Coord(2,3),
-   Coord(2,4),
-   Coord(3,4),
-   Coord(2,2),
-  ),
-  PlaceAction(
+   Coord(4,4),
    Coord(2,4),
    Coord(3,3),
    Coord(3,4),
-   Coord(1,4),
   ),
   PlaceAction(
-   Coord(2,3),
-   Coord(3,3),
-   Coord(3,4),
-   Coord(3,5),
-  ),
-  PlaceAction(
-   Coord(4,6),
-   Coord(3,4),
-   Coord(3,5),
-   Coord(3,6),
-  ),
-  PlaceAction(
-   Coord(2,5),
-   Coord(3,4),
-   Coord(3,5),
-   Coord(1,5),
-  ),
-  PlaceAction(
-   Coord(2,4),
-   Coord(3,4),
-   Coord(1,4),
-   Coord(1,5),
-  ),
-  PlaceAction(
-   Coord(2,4),
-   Coord(3,4),
-   Coord(3,5),
-   Coord(3,6),
-  ),
-  PlaceAction(
+   Coord(4,4),
    Coord(5,3),
-   Coord(3,3),
    Coord(3,4),
    Coord(4,3),
   ),
   PlaceAction(
-   Coord(2,4),
-   Coord(3,3),
+   Coord(4,4),
+   Coord(4,5),
+   Coord(5,4),
    Coord(3,4),
-   Coord(4,3),
   ),
   PlaceAction(
-   Coord(2,3),
-   Coord(2,4),
-   Coord(3,4),
-   Coord(3,5),
+   Coord(4,4),
+   Coord(5,3),
+   Coord(5,4),
+   Coord(6,4),
   ),
   PlaceAction(
+   Coord(4,4),
    Coord(4,5),
    Coord(4,6),
    Coord(3,4),
-   Coord(3,5),
   ),
   PlaceAction(
-   Coord(2,4),
-   Coord(2,5),
-   Coord(3,4),
-   Coord(1,5),
-  ),
-  PlaceAction(
-   Coord(2,3),
-   Coord(3,3),
-   Coord(3,4),
-   Coord(2,2),
-  ),
-  PlaceAction(
-   Coord(2,3),
+   Coord(4,4),
    Coord(3,2),
    Coord(3,3),
-   Coord(3,4),
-  ),
-  PlaceAction(
-   Coord(2,3),
-   Coord(3,3),
-   Coord(3,4),
    Coord(4,3),
   ),
   PlaceAction(
-   Coord(2,3),
-   Coord(2,4),
-   Coord(3,4),
-   Coord(1,4),
-  ),
-  PlaceAction(
-   Coord(2,4),
-   Coord(3,3),
-   Coord(3,4),
-   Coord(3,5),
-  ),
-  PlaceAction(
-   Coord(2,3),
-   Coord(2,4),
-   Coord(2,5),
-   Coord(3,4),
-  ),
-  PlaceAction(
-   Coord(4,5),
-   Coord(2,5),
-   Coord(3,4),
-   Coord(3,5),
-  ),
-  PlaceAction(
-   Coord(2,5),
-   Coord(3,4),
-   Coord(3,5),
-   Coord(3,6),
-  ),
-  PlaceAction(
-   Coord(4,5),
-   Coord(3,4),
-   Coord(3,5),
-   Coord(3,6),
-  ),
-  PlaceAction(
-   Coord(2,4),
-   Coord(2,5),
-   Coord(3,4),
-   Coord(1,4),
-  ),
-  PlaceAction(
-   Coord(3,2),
-   Coord(3,3),
-   Coord(3,4),
-   Coord(4,3),
-  ),
-  PlaceAction(
-   Coord(2,3),
-   Coord(2,4),
-   Coord(3,3),
-   Coord(3,4),
-  ),
-  PlaceAction(
-   Coord(2,4),
-   Coord(2,5),
-   Coord(3,4),
-   Coord(3,5),
-  ),
-  PlaceAction(
-   Coord(5,3),
-   Coord(5,4),
-   Coord(5,5),
-   Coord(5,6),
-  ),
-  PlaceAction(
-   Coord(5,3),
-   Coord(5,4),
-   Coord(5,5),
-   Coord(5,2),
-  ),
-  PlaceAction(
-   Coord(5,3),
-   Coord(5,4),
-   Coord(5,1),
-   Coord(5,2),
-  ),
-  PlaceAction(
-   Coord(5,4),
-   Coord(5,5),
-   Coord(5,6),
-   Coord(5,7),
-  ),
-  PlaceAction(
-   Coord(7,4),
-   Coord(5,4),
-   Coord(8,4),
-   Coord(6,4),
-  ),
-  PlaceAction(
-   Coord(5,3),
-   Coord(5,4),
-   Coord(5,5),
-   Coord(6,5),
-  ),
-  PlaceAction(
-   Coord(5,3),
-   Coord(5,4),
-   Coord(4,2),
-   Coord(5,2),
-  ),
-  PlaceAction(
-   Coord(7,4),
-   Coord(5,4),
-   Coord(5,5),
-   Coord(6,4),
-  ),
-  PlaceAction(
-   Coord(5,3),
-   Coord(5,4),
-   Coord(5,5),
-   Coord(4,3),
-  ),
-  PlaceAction(
-   Coord(6,6),
-   Coord(5,4),
-   Coord(5,5),
-   Coord(5,6),
-  ),
-  PlaceAction(
-   Coord(4,5),
-   Coord(5,4),
-   Coord(3,5),
-   Coord(5,5),
-  ),
-  PlaceAction(
-   Coord(6,6),
-   Coord(5,4),
-   Coord(6,4),
-   Coord(6,5),
-  ),
-  PlaceAction(
-   Coord(5,3),
-   Coord(5,4),
-   Coord(6,4),
-   Coord(5,2),
-  ),
-  PlaceAction(
-   Coord(7,4),
-   Coord(5,4),
-   Coord(6,4),
-   Coord(7,3),
-  ),
-  PlaceAction(
-   Coord(5,3),
-   Coord(5,4),
-   Coord(6,3),
-   Coord(7,3),
-  ),
-  PlaceAction(
-   Coord(5,3),
-   Coord(5,4),
-   Coord(6,4),
-   Coord(6,5),
-  ),
-  PlaceAction(
+   Coord(4,4),
    Coord(4,5),
    Coord(5,4),
    Coord(5,5),
-   Coord(6,4),
   ),
   PlaceAction(
-   Coord(6,6),
-   Coord(5,4),
-   Coord(5,5),
-   Coord(6,5),
-  ),
-  PlaceAction(
-   Coord(5,3),
-   Coord(5,4),
-   Coord(4,2),
+   Coord(4,4),
+   Coord(2,4),
+   Coord(3,4),
    Coord(4,3),
   ),
   PlaceAction(
-   Coord(5,4),
-   Coord(6,3),
-   Coord(6,4),
-   Coord(7,3),
-  ),
-  PlaceAction(
-   Coord(7,4),
-   Coord(5,4),
-   Coord(6,3),
-   Coord(6,4),
-  ),
-  PlaceAction(
-   Coord(5,3),
-   Coord(5,2),
-   Coord(5,4),
-   Coord(4,3),
-  ),
-  PlaceAction(
+   Coord(4,4),
    Coord(5,3),
    Coord(5,4),
-   Coord(6,3),
-   Coord(4,3),
+   Coord(3,4),
   ),
   PlaceAction(
-   Coord(5,3),
-   Coord(5,4),
-   Coord(5,5),
-   Coord(6,4),
-  ),
-  PlaceAction(
-   Coord(7,4),
-   Coord(5,4),
-   Coord(6,4),
-   Coord(6,5),
-  ),
-  PlaceAction(
+   Coord(4,4),
    Coord(4,5),
-   Coord(5,4),
-   Coord(5,5),
-   Coord(6,5),
-  ),
-  PlaceAction(
-   Coord(4,5),
-   Coord(5,4),
-   Coord(5,6),
-   Coord(5,5),
-  ),
-  PlaceAction(
-   Coord(5,4),
-   Coord(5,5),
-   Coord(5,6),
-   Coord(6,5),
-  ),
-  PlaceAction(
-   Coord(5,3),
-   Coord(5,4),
-   Coord(6,3),
-   Coord(5,2),
-  ),
-  PlaceAction(
-   Coord(5,3),
-   Coord(5,4),
-   Coord(6,3),
-   Coord(6,4),
-  ),
-  PlaceAction(
-   Coord(5,4),
-   Coord(5,5),
-   Coord(6,4),
-   Coord(6,5),
-  ),
-  PlaceAction(
-   Coord(5,3),
-   Coord(6,3),
-   Coord(3,3),
+   Coord(3,4),
    Coord(4,3),
   ),
   PlaceAction(
-   Coord(2,3),
-   Coord(5,3),
-   Coord(3,3),
-   Coord(4,3),
-  ),
-  PlaceAction(
-   Coord(4,0),
+   Coord(4,4),
    Coord(4,1),
    Coord(4,2),
    Coord(4,3),
   ),
   PlaceAction(
-   Coord(2,3),
-   Coord(3,3),
-   Coord(1,3),
-   Coord(4,3),
-  ),
-  PlaceAction(
-   Coord(5,3),
-   Coord(6,3),
-   Coord(7,3),
-   Coord(4,3),
-  ),
-  PlaceAction(
-   Coord(5,3),
-   Coord(5,2),
-   Coord(3,3),
-   Coord(4,3),
-  ),
-  PlaceAction(
-   Coord(3,1),
-   Coord(4,1),
-   Coord(4,2),
-   Coord(4,3),
-  ),
-  PlaceAction(
-   Coord(3,1),
-   Coord(3,2),
-   Coord(3,3),
-   Coord(4,3),
-  ),
-  PlaceAction(
-   Coord(2,3),
-   Coord(3,3),
-   Coord(4,2),
-   Coord(4,3),
-  ),
-  PlaceAction(
-   Coord(2,3),
-   Coord(2,4),
-   Coord(3,3),
-   Coord(4,3),
-  ),
-  PlaceAction(
-   Coord(5,3),
-   Coord(4,1),
-   Coord(4,2),
-   Coord(4,3),
-  ),
-  PlaceAction(
-   Coord(5,3),
-   Coord(6,2),
-   Coord(6,3),
-   Coord(4,3),
-  ),
-  PlaceAction(
-   Coord(4,3),
-   Coord(6,2),
-   Coord(4,2),
-   Coord(5,2),
-  ),
-  PlaceAction(
-   Coord(5,2),
-   Coord(3,3),
-   Coord(4,2),
-   Coord(4,3),
-  ),
-  PlaceAction(
-   Coord(3,1),
-   Coord(3,2),
-   Coord(4,2),
-   Coord(4,3),
-  ),
-  PlaceAction(
-   Coord(5,3),
-   Coord(6,2),
-   Coord(4,3),
-   Coord(5,2),
-  ),
-  PlaceAction(
-   Coord(5,3),
-   Coord(5,2),
-   Coord(6,3),
-   Coord(4,3),
-  ),
-  PlaceAction(
-   Coord(3,2),
-   Coord(4,1),
-   Coord(4,2),
-   Coord(4,3),
-  ),
-  PlaceAction(
-   Coord(5,2),
-   Coord(3,2),
-   Coord(4,2),
-   Coord(4,3),
-  ),
-  PlaceAction(
-   Coord(2,3),
-   Coord(3,2),
-   Coord(3,3),
-   Coord(4,3),
-  ),
-  PlaceAction(
-   Coord(5,2),
-   Coord(4,1),
-   Coord(4,2),
-   Coord(4,3),
-  ),
-  PlaceAction(
-   Coord(5,3),
-   Coord(5,2),
-   Coord(4,2),
-   Coord(4,3),
-  ),
-  PlaceAction(
-   Coord(3,2),
-   Coord(3,3),
-   Coord(4,2),
-   Coord(4,3),
-  ),
-  PlaceAction(
-   Coord(4,5),
-   Coord(5,5),
-   Coord(6,5),
-   Coord(3,5),
-  ),
-  PlaceAction(
+   Coord(4,4),
    Coord(4,5),
    Coord(2,5),
    Coord(3,5),
-   Coord(5,5),
   ),
   PlaceAction(
-   Coord(4,5),
-   Coord(2,5),
-   Coord(3,5),
-   Coord(1,5),
-  ),
-  PlaceAction(
-   Coord(4,5),
-   Coord(4,6),
-   Coord(4,7),
-   Coord(4,8),
-  ),
-  PlaceAction(
-   Coord(4,5),
-   Coord(5,5),
-   Coord(7,5),
-   Coord(6,5),
-  ),
-  PlaceAction(
-   Coord(4,6),
-   Coord(4,5),
-   Coord(5,5),
-   Coord(6,5),
-  ),
-  PlaceAction(
-   Coord(4,5),
-   Coord(5,5),
-   Coord(3,5),
-   Coord(3,6),
-  ),
-  PlaceAction(
-   Coord(4,5),
-   Coord(4,6),
-   Coord(4,7),
-   Coord(5,7),
-  ),
-  PlaceAction(
-   Coord(4,5),
-   Coord(4,6),
-   Coord(2,6),
-   Coord(3,6),
-  ),
-  PlaceAction(
-   Coord(4,5),
+   Coord(4,4),
+   Coord(5,4),
    Coord(5,5),
    Coord(5,6),
-   Coord(5,7),
   ),
   PlaceAction(
+   Coord(4,4),
+   Coord(3,2),
+   Coord(3,3),
+   Coord(3,4),
+  ),
+  PlaceAction(
+   Coord(4,4),
+   Coord(5,4),
+   Coord(6,4),
+   Coord(3,4),
+  ),
+  PlaceAction(
+   Coord(4,4),
    Coord(4,5),
-   Coord(2,5),
-   Coord(2,6),
+   Coord(4,6),
    Coord(3,5),
   ),
   PlaceAction(
+   Coord(4,4),
    Coord(4,5),
+   Coord(5,4),
+   Coord(4,3),
+  ),
+  PlaceAction(
+   Coord(4,4),
+   Coord(2,4),
+   Coord(2,5),
+   Coord(3,4),
+  ),
+  PlaceAction(
+   Coord(4,4),
+   Coord(4,5),
+   Coord(5,5),
+   Coord(3,5),
+  ),
+  PlaceAction(
+   Coord(4,4),
+   Coord(3,3),
+   Coord(4,2),
+   Coord(4,3),
+  ),
+  PlaceAction(
+   Coord(4,4),
+   Coord(5,4),
+   Coord(4,2),
+   Coord(4,3),
+  ),
+  PlaceAction(
+   Coord(5,3),
+   Coord(6,3),
+   Coord(4,4),
+   Coord(4,3),
+  ),
+  PlaceAction(
+   Coord(4,4),
+   Coord(4,5),
+   Coord(3,3),
+   Coord(3,4),
+  ),
+  PlaceAction(
+   Coord(4,4),
+   Coord(2,4),
+   Coord(3,4),
+   Coord(1,4),
+  ),
+  PlaceAction(
+   Coord(4,4),
+   Coord(3,3),
+   Coord(3,4),
+   Coord(3,5),
+  ),
+  PlaceAction(
+   Coord(5,3),
+   Coord(5,4),
+   Coord(6,3),
+   Coord(4,4),
+  ),
+  PlaceAction(
+   Coord(4,4),
+   Coord(4,5),
+   Coord(4,6),
+   Coord(5,5),
+  ),
+  PlaceAction(
+   Coord(4,4),
+   Coord(4,5),
+   Coord(3,4),
+   Coord(3,5),
+  ),
+  PlaceAction(
+   Coord(4,4),
+   Coord(5,4),
+   Coord(5,5),
+   Coord(4,3),
+  ),
+  PlaceAction(
+   Coord(4,4),
+   Coord(2,5),
+   Coord(3,4),
+   Coord(3,5),
+  ),
+  PlaceAction(
+   Coord(4,4),
+   Coord(4,5),
+   Coord(4,6),
+   Coord(4,3),
+  ),
+  PlaceAction(
+   Coord(4,4),
+   Coord(4,5),
+   Coord(4,6),
+   Coord(5,6),
+  ),
+  PlaceAction(
+   Coord(4,4),
+   Coord(4,5),
+   Coord(4,2),
+   Coord(4,3),
+  ),
+  PlaceAction(
+   Coord(4,4),
+   Coord(4,5),
+   Coord(5,4),
+   Coord(3,5),
+  ),
+  PlaceAction(
+   Coord(4,4),
+   Coord(5,3),
+   Coord(4,2),
+   Coord(4,3),
+  ),
+  PlaceAction(
+   Coord(4,4),
+   Coord(4,5),
+   Coord(3,3),
+   Coord(4,3),
+  ),
+  PlaceAction(
+   Coord(4,4),
+   Coord(3,2),
+   Coord(4,2),
+   Coord(4,3),
+  ),
+  PlaceAction(
+   Coord(4,4),
+   Coord(5,4),
    Coord(5,5),
    Coord(6,4),
-   Coord(6,5),
   ),
   PlaceAction(
+   Coord(4,4),
+   Coord(4,5),
+   Coord(5,4),
+   Coord(6,4),
+  ),
+  PlaceAction(
+   Coord(4,4),
+   Coord(2,4),
+   Coord(3,4),
+   Coord(3,5),
+  ),
+  PlaceAction(
+   Coord(4,4),
+   Coord(7,4),
+   Coord(5,4),
+   Coord(6,4),
+  ),
+  PlaceAction(
+   Coord(4,4),
+   Coord(5,4),
+   Coord(6,3),
+   Coord(6,4),
+  ),
+  PlaceAction(
+   Coord(4,4),
    Coord(4,5),
    Coord(4,6),
    Coord(4,7),
-   Coord(3,5),
   ),
   PlaceAction(
-   Coord(4,5),
-   Coord(4,6),
-   Coord(3,6),
-   Coord(5,5),
+   Coord(4,4),
+   Coord(5,3),
+   Coord(3,3),
+   Coord(4,3),
   ),
   PlaceAction(
-   Coord(4,5),
-   Coord(4,6),
-   Coord(5,6),
-   Coord(5,7),
+   Coord(4,4),
+   Coord(3,3),
+   Coord(3,4),
+   Coord(4,3),
   ),
   PlaceAction(
-   Coord(4,5),
-   Coord(2,6),
-   Coord(3,5),
-   Coord(3,6),
+   Coord(4,4),
+   Coord(5,3),
+   Coord(5,4),
+   Coord(4,3),
   ),
   PlaceAction(
-   Coord(4,5),
-   Coord(5,5),
-   Coord(5,6),
-   Coord(6,5),
-  ),
-  PlaceAction(
-   Coord(4,5),
-   Coord(4,6),
-   Coord(5,6),
-   Coord(3,6),
-  ),
-  PlaceAction(
-   Coord(4,5),
-   Coord(4,6),
-   Coord(4,7),
-   Coord(3,6),
-  ),
-  PlaceAction(
-   Coord(4,5),
-   Coord(4,6),
-   Coord(3,5),
-   Coord(5,5),
-  ),
-  PlaceAction(
-   Coord(4,5),
-   Coord(4,6),
-   Coord(4,7),
-   Coord(5,6),
-  ),
-  PlaceAction(
-   Coord(4,5),
-   Coord(2,5),
-   Coord(3,5),
-   Coord(3,6),
-  ),
-  PlaceAction(
-   Coord(4,6),
+   Coord(4,4),
    Coord(4,5),
    Coord(5,5),
-   Coord(5,6),
+   Coord(4,3),
   ),
   PlaceAction(
-   Coord(4,5),
-   Coord(4,6),
+   Coord(4,4),
+   Coord(5,4),
+   Coord(3,4),
    Coord(3,5),
-   Coord(3,6),
   ),
-
+  PlaceAction(
+   Coord(4,4),
+   Coord(2,4),
+   Coord(5,4),
+   Coord(3,4),
+  ),
 ]
 
 
@@ -2142,16 +1607,7 @@ Player = PlayerColor
 
 # which coords
 
-def columnsAndRowsOccupied(coords : Iterable[Coord]) :
 
-  rows = set()
-  columns = set()
-
-  for coord in coords :
-    rows.add(coord.r)
-    columns.add(coord.c)
-
-  return (columns, rows)
 
 def columnsAndRowsOccupied_WithColour(board : Board, player : PlayerColor) :
 
@@ -2215,7 +1671,7 @@ def heuristic(stateBeforeAction : State, action : Action, player : Player, whosM
   reversedPlayer = reversePlayer(player)
   stateAfterAction, isElim = deriveBoardWrapper(stateBeforeAction, [action], player)
 
-  if len(stateBeforeAction.keys()) > 80 :
+  if len(stateBeforeAction.keys()) > 1 :
 
     # this is expensive if you have a high branching factor
     # you should have lots of moves, your opponent should have few
@@ -2224,7 +1680,7 @@ def heuristic(stateBeforeAction : State, action : Action, player : Player, whosM
 
   if isElim :
   
-    heuristicSquareCountDifference = playerSquareBias(stateAfterAction, player) - playerSquareBias(stateBeforeAction, player) - 4 # it should be better than just placing
+    heuristicSquareCountDifference = playerSquareBias(stateAfterAction, player) - playerSquareBias(stateBeforeAction, player) - 8 # it should be better than just placing
     heuristic_value += heuristicSquareCountDifference * 1000 # if there is the possibility to eliminate, this should be important
 
   eliminationPrevention = - subTop3numberOfCoordsInColumnAndRows(stateAfterAction, player) + subTop3numberOfCoordsInColumnAndRows(stateAfterAction, reversedPlayer)
@@ -2629,7 +2085,7 @@ class Agent:
           return mcts(self._color, self.board_state, iterations=ITERATIONS, isFirstMove=self.firstMove)
           """
 
-        IS_PROFILE = False
+        IS_PROFILE = True
 
         if IS_PROFILE :
 
