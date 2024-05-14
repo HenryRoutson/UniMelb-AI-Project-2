@@ -2357,7 +2357,7 @@ def scoreFromwinProp(winProp : WinsAndGames) -> float : # TODO need to seperate 
 def updateWinsAndGames(winProp : WinsAndGames, didWin : bool) -> WinsAndGames :
   return (winProp[0] + didWin, winProp[1] + 1)
 
-def getMinOrMaxFromChildren(parent : GameTree, isMax) -> int :
+def getMinOrMaxFromChildren_UCB(parent : GameTree, isMax) -> int :
   children = parent.children
 
   assert(children != [])
@@ -2379,7 +2379,7 @@ def getMinOrMaxFromChildren(parent : GameTree, isMax) -> int :
   max_index = scores.index(getValue)
   return max_index
 
-def getMinMaxPath(tree : GameTree, isMaxFirst : bool, state : State, playing : PlayerColor) -> tuple[list[GameTree], State] :
+def getMinMaxPath_UCB(tree : GameTree, isMaxFirst : bool, state : State, playing : PlayerColor) -> tuple[list[GameTree], State] :
   
 
   whosMove = playing
@@ -2390,7 +2390,7 @@ def getMinMaxPath(tree : GameTree, isMaxFirst : bool, state : State, playing : P
     if (tree.action) :
       state = applyActionToState(state, tree.action, whosMove)
 
-    next_i = getMinOrMaxFromChildren(tree, isMaxFirst)
+    next_i = getMinOrMaxFromChildren_UCB(tree, isMaxFirst)
     next = tree.children[next_i]
     path.append(next)
     tree = next
@@ -2449,7 +2449,7 @@ def makeMoveWith(initState : State, tree : GameTree, playerNotWhosMove: Player, 
   isMaxFirst = True
 
   # 1 Selection (min max)
-  path, leafState = getMinMaxPath(tree, isMaxFirst, initState, playerNotWhosMove)
+  path, leafState = getMinMaxPath_UCB(tree, isMaxFirst, initState, playerNotWhosMove)
   depth = len(path)
   whosMoveNotPlayer = whosMoveFromDepth(depth=depth, playing=playerNotWhosMove)
 
@@ -2516,7 +2516,7 @@ def mcts(player : Player, fromState : State, isFirstMove : bool, iterations : in
       print("Tree")
       printTree(gameTree, fromState, toIndent=3, playing=player)
 
-  nodes, endState = getMinMaxPath(gameTree, True, fromState, player)
+  nodes, endState = getMinMaxPath_UCB(gameTree, True, fromState, player)
   bestAction = nodes[1].action # 1 to ignore start node
   assert(bestAction)
   return bestAction
@@ -2541,6 +2541,14 @@ def greedy_moves(player : Player, fromState : State, isFirstMove : bool) -> Acti
   actions.sort(key=heuristicFromAction, reverse=True)
 
   return list(actions)[0] # can be an error here if no moves, this is fine
+
+
+
+
+# ================================================================================
+# min max
+
+
 
 
 
@@ -2639,8 +2647,8 @@ class Agent:
           assert(False)
            
         """
-        
-        gc.collect() # reduce memory usage
+
+        #gc.collect() # reduce memory usage
         self.firstMove = False
         return action
 
