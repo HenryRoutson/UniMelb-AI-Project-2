@@ -90,3 +90,51 @@ debug when iterations is 1
 
 referee["time_remaining"]: The number of seconds remaining in CPU time for your agent instance. If the referee is not configured with a time limit, this will be equal to None.
 • referee["space_remaining"]
+
+
+
+
+
+
+
+There is a move here
+
+* referee : ==================================================================
+* referee : 
+* referee : BLUE to play (turn 60) ...
+* referee : BLUE plays action PLACE(9-6, 9-7, 10-7, 8-7)
+* referee : 
+* referee : =========================== game board ===========================
+* referee : 
+* referee :                       r r b . b b b b . r r 
+* referee :                       . b b r b b . b b r r 
+* referee :                       r r b r r . r . r r r 
+* referee :                       b b b . r r r . r . b 
+* referee :                       b b b b . r . r r b b 
+* referee :                       b b b b r . . r . b b 
+* referee :                       b b b . . b r r b b . 
+* referee :                       r . . r b b r r b b r 
+* referee :                       r r . r r b . b b r r 
+* referee :                       r r . r r b b b b r r 
+* referee :                       r r r r r b b b . r . 
+* referee : 
+* referee : ==================================================================
+* referee : 
+* referee : RED to play (turn 61) ...
+* player1 ! exception caught (pid=58630):
+* player1 ! 
+* player1 ! >>              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+* player1 ! >>   File "/workspaces/UniMelb-AI-Project-2/agent/program.py", line 2642, in action
+* player1 ! >>     action = get_action()
+* player1 ! >>              ^^^^^^^^^^^^
+* player1 ! >>   File "/workspaces/UniMelb-AI-Project-2/agent/program.py", line 2614, in get_action
+* player1 ! >>     return greedy_moves(self._color, self.board_state, isFirstMove=self.firstMove)
+* player1 ! >>            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+* player1 ! >>   File "/workspaces/UniMelb-AI-Project-2/agent/program.py", line 2543, in greedy_moves
+* player1 ! >>     action = list(actions)[0] # can be an error here if no moves, this is fine
+* player1 ! >>              ~~~~~~~~~~~~~^^^
+* player1 ! >> IndexError: list index out of range
+* player1 ! 
+* referee ! player error: ERROR: error in player 1 [agent:Agent] agent
+* referee ! ⤷ IndexError: list index out of range
+* referee : game over, winner is BLUE

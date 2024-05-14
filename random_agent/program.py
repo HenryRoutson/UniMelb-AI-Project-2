@@ -2206,7 +2206,7 @@ def playerSquareBias(board : Board, player : Player) -> int :
   return counts[player] - counts[reversePlayer(player)]
    
 
-def heuristic(stateBeforeAction : State, action : Action, player : Player, whosMove : Player) -> float :
+def heuristic(stateBeforeAction : State, action : Action, player : Player) -> float :
   # used to pick which value to expand
   # this is much better than expanding randomly
 
@@ -2215,16 +2215,9 @@ def heuristic(stateBeforeAction : State, action : Action, player : Player, whosM
   reversedPlayer = reversePlayer(player)
   stateAfterAction, isElim = deriveBoardWrapper(stateBeforeAction, [action], player)
 
-  if len(stateBeforeAction.keys()) > 80 :
-
-    # this is expensive if you have a high branching factor
-    # you should have lots of moves, your opponent should have few
-    heuristic_value += len(list(getActionsFromState(stateAfterAction, PlaceColour = player, isFirstMove = False)))
-    heuristic_value -= len(list(getActionsFromState(stateAfterAction, PlaceColour = reversedPlayer, isFirstMove = False)))
-
   if isElim :
   
-    heuristicSquareCountDifference = playerSquareBias(stateAfterAction, player) - playerSquareBias(stateBeforeAction, player) - 4 # it should be better than just placing
+    heuristicSquareCountDifference = playerSquareBias(stateAfterAction, player) - 4 # it should be better than just placing
     heuristic_value += heuristicSquareCountDifference * 1000 # if there is the possibility to eliminate, this should be important
 
   eliminationPrevention = - subTop3numberOfCoordsInColumnAndRows(stateAfterAction, player) + subTop3numberOfCoordsInColumnAndRows(stateAfterAction, reversedPlayer)
@@ -2465,7 +2458,7 @@ def makeMoveWith(initState : State, tree : GameTree, playerNotWhosMove: Player, 
   leafActions = list(getActionsFromState(leafState, whosMoveNotPlayer, isFirstMove))
 
   def heuristicFromAction(action : Action) :
-    return heuristic(stateBeforeAction=leafState, action=action, whosMove=whosMoveNotPlayer, player=playerNotWhosMove)
+    return heuristic(stateBeforeAction=leafState, action=action, player=whosMoveNotPlayer)
 
   leafActions.sort(key=heuristicFromAction, reverse=True)
 
@@ -2542,13 +2535,13 @@ def random_moves(player : Player, fromState : State, isFirstMove : bool) -> Acti
 def greedy_moves(player : Player, fromState : State, isFirstMove : bool) -> Action :
 
   def heuristicFromAction(action : Action) :
-    return heuristic(stateBeforeAction=fromState, action=action, player=player, whosMove=player)
+    return heuristic(stateBeforeAction=fromState, action=action, player=player)
 
   actions = list(getActionsFromState(fromState, player, isFirstMove))
   actions.sort(key=heuristicFromAction, reverse=True)
 
   action = list(actions)[0] # can be an error here if no moves, this is fine
-  print(heuristic(stateBeforeAction=fromState, action=action, player=player, whosMove=player))
+  print(heuristic(stateBeforeAction=fromState, action=action, player=player))
   printBoardPlaceAction([action], player)
 
   return action
@@ -2588,12 +2581,7 @@ class Agent:
           assert(False)
 
         self._color : PlayerColor = PlayerColorFromString(color) 
-        if color == PlayerColor.RED:
-            print("Testing: I am playing as RED")
-        if color == PlayerColor.BLUE:
-            print("Testing: I am playing as BLUE")
-        else :
-           print("error on colour match") # TODO
+        print("I am random")
 
 
         # init board state 
@@ -2618,7 +2606,7 @@ class Agent:
           # if branching factor is too high, be quick and greedy
 
 
-          return greedy_moves(self._color, self.board_state, isFirstMove=self.firstMove)
+          return random_moves(self._color, self.board_state, isFirstMove=self.firstMove)
 
 
 
@@ -2651,15 +2639,16 @@ class Agent:
 
         # if a good move, you won't eliminate more of your own pieces
 
-
+        """
         if not (playerSquareBias(deriveBoard(self.board_state, [action], self._color)[0], self._color) >= playerSquareBias(self.board_state, self._color))  :
            
-          print(heuristic(self.board_state, action, whosMove=self._color, player=self._color))
+          print(heuristic(self.board_state, action, self._color))
           print(render_board(self.board_state))
           print(render_board(deriveBoard(self.board_state, [action], self._color)[0]))
           print(self._color)
           assert(False)
-          
+           
+        """
 
         #gc.collect() # reduce memory usage
         self.firstMove = False
