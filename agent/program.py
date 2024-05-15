@@ -228,6 +228,13 @@ VALUE_INDEX = 1 # colour
 Heuristic_value = tuple[int, int]
 
 
+# TODO create iterator for memory maybe
+allCoords = []
+for x in range(BOARD_N) :
+   for y in range(BOARD_N) :
+      allCoords.append(Coord(x,y))
+
+
 
 def squaresToPieces(numSquares : int) -> int :
   # return min number of pieces to create number of squares
@@ -425,20 +432,6 @@ def getCoordsOfColour(board : Board, colour : PlayerColor) -> list[Coord] :
   
   
 
-def a_star_len(BOARD : Board, coords_from : list[Coord], index : int, isColumn : bool, PlayerColor : PlayerColor) -> int :
-  tmp = a_star(BOARD, coords_from, index, isColumn, PlayerColor)
-  if tmp == None : return -1
-  else : return len(tmp)
-
-
-def minSquaresOfColorToIndexRowOrColumn(board : Board, target_index : int, isColumn, PlaceColour : PlayerColor) -> int :
-  # manhattan distance
-
-  squares_of_place_colour : list[Coord] = getCoordsOfColour(board, PlaceColour)
-
-  # TODO config here to use a* or simple manhattan
-  #return a_star_len(board, squares_of_place_colour, target_index, isColumn)
-  return a_star_heuristic(squares_of_place_colour, target_index, isColumn)
 
 
 def minNumSquaresToDeleteTarget(board : Board, target : Target) :
@@ -510,19 +503,6 @@ def squaresToCompleteLine(board : Board, index : int, isColumn : bool) -> int :
 """
 
 
-def minSquareCostForRowOrColumn(board : Board, target : Coord, isColumn : bool, PlaceColour: PlayerColor) -> int :
-  if isColumn : index = target.c
-  else        : index = target.r
-
-  empty_places_on_line = emptyPlacesCount(board, index, isColumn)
-  
-  tmp = minSquaresOfColorToIndexRowOrColumn(board, index, isColumn, PlaceColour)
-  if (tmp == -1) : return -1
-  squares_to_line = max(tmp - 1, 0) # -1 becuase if you have a square on the line that doesn't matter, it only needs to be next to the line
-  min_num_squares = squares_to_line + empty_places_on_line
-
-  return min_num_squares
-
 
 def numSquaresToPieces(i : int) :
   return  math.ceil(i / 4) # 
@@ -549,14 +529,22 @@ def isPiecePlaceSquaresEmpty(place : PlaceAction, board : Board) -> bool :
 
 
 
-# HERE TODO 
-def coordSquareNeighbors(coord : Coord) -> list[Coord] :
+def coordSquareNeighborsCompileTime(coord : Coord) -> list[Coord] :
   return [
     coord.__add__(Direction.Up),
     coord.__add__(Direction.Down),
     coord.__add__(Direction.Left),
     coord.__add__(Direction.Right)
   ]
+
+coordSquareNeighborsDict = dict()
+for coord in allCoords:
+   coordSquareNeighborsDict[coord] = coordSquareNeighborsCompileTime(coord)
+
+def coordSquareNeighbors(coord : Coord) -> list[Coord] :
+  return coordSquareNeighborsDict[coord]
+
+
 
 def coordEmptySquareNeighbors(board : Board, coord : Coord) -> list[Coord] :
   return list(filter(lambda coord : coord not in board.keys() ,coordSquareNeighbors(coord)))
@@ -1680,7 +1668,7 @@ def heuristic(stateBeforeAction : State, action : Action, player : Player, whosM
     # this is expensive if you have a high branching factor
     # you should have lots of moves, your opponent should have few
 
-    movesForThisPlayer = len(list(getSquaresAdjToColourAndEmpty(stateAfterAction, player))) / 10
+    #movesForThisPlayer = len(list(getSquaresAdjToColourAndEmpty(stateAfterAction, player))) / 10
     heuristic_value -= len(list(getSquaresAdjToColourAndEmpty(stateAfterAction, reversedPlayer))) 
 
 
@@ -1700,8 +1688,8 @@ def heuristic(stateBeforeAction : State, action : Action, player : Player, whosM
     heuristic_value += heuristicSquareCountDifference * 1000 # if there is the possibility to eliminate, this should be important
 
 
-  eliminationPrevention = - subTop3numberOfCoordsInColumnAndRows(stateAfterAction, player) + subTop3numberOfCoordsInColumnAndRows(stateAfterAction, reversedPlayer)
-  heuristic_value += eliminationPrevention
+  #eliminationPrevention = - subTop3numberOfCoordsInColumnAndRows(stateAfterAction, player) + subTop3numberOfCoordsInColumnAndRows(stateAfterAction, reversedPlayer)
+  #heuristic_value += eliminationPrevention
 
   return heuristic_value
 
@@ -1722,11 +1710,7 @@ def tieBreaker(state : State) -> Optional[Player] :
 
 
 
-# TODO create iterator for memory maybe
-allCoords = []
-for x in range(BOARD_N) :
-   for y in range(BOARD_N) :
-      allCoords.append(Coord(x,y))
+
 
 
 def getActionsFromState(state : State, PlaceColour : PlayerColor, isFirstMove : bool) -> Iterable[Action] :
