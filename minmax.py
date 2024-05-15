@@ -161,7 +161,7 @@ def min_max(playing_player : Player, toDepth : int, state : State = START_STATE)
 
     # min or max case
     isMax = (whosMove == playing_player)
-    result = min_max_helper(isMax=isMax, toDepth=toDepth, state=state, depth=depth, whosMove=whosMove, alpha= alpha, beta= beta)
+    result = min_max_helper(isMax=isMax, toDepth=toDepth, state=stateAfter, depth=depth, whosMove=whosMove, alpha= alpha, beta= beta)
 
     if whosMove == PLAYER1 : assert(result[0] == 2)
     if whosMove == PLAYER2 : 
