@@ -224,13 +224,13 @@ def heuristic(state : State, player : Player) -> float :
   
 
 
-def min_max(playing_player : Player, toDepth : int, state : State, depth : int = 0) -> tuple[Optional[Action], float] :
+def min_max(playing_player : Player, toDepth : int, state : State, depth : int = 0) -> tuple[list[Action], float] :
 
   if depth == toDepth : 
-    return (None, heuristic(state = state, player= playing_player))
+    return ([], heuristic(state = state, player= playing_player))
   
   if isStateWin(state) != None :
-    return (None, INF if playing_player == isStateWin(state) else -INF)
+    return ([], INF if playing_player == isStateWin(state) else -INF)
 
   whosMove = whosMoveFromDepth(depth, playing_player)
 
@@ -240,7 +240,7 @@ def min_max(playing_player : Player, toDepth : int, state : State, depth : int =
     best_value : float = -INF
     for action in getActionsFromState(state, playing_player) :
         new_state = applyActionToState(state=state, action=action, whosMove=whosMove)
-        nextAction, cur_value = min_max(playing_player=playing_player, depth=depth + 1, toDepth=toDepth, state=new_state)
+        nextActions, cur_value = min_max(playing_player=playing_player, depth=depth + 1, toDepth=toDepth, state=new_state)
         if cur_value == max([cur_value, best_value]) :
           best_value = cur_value
           best_action = action
@@ -251,7 +251,7 @@ def min_max(playing_player : Player, toDepth : int, state : State, depth : int =
     best_value : float = INF
     for action in getActionsFromState(state, playing_player) :
         new_state = applyActionToState(state=state, action=action, whosMove=whosMove)
-        nextAction, cur_value = min_max(playing_player=playing_player, depth=depth + 1, toDepth=toDepth, state=new_state)
+        nextActions, cur_value = min_max(playing_player=playing_player, depth=depth + 1, toDepth=toDepth, state=new_state)
         if cur_value == min([cur_value, best_value]) :
           best_value = cur_value
           best_action = action
@@ -259,7 +259,10 @@ def min_max(playing_player : Player, toDepth : int, state : State, depth : int =
   # 
 
   assert(best_action != None) 
-  return (best_action, best_value)
+
+  lst = [best_action]
+  lst.extend(nextActions)
+  return (lst, best_value)
 
 
 
@@ -279,4 +282,4 @@ def min_max(playing_player : Player, toDepth : int, state : State, depth : int =
 # ================================================================================
 # call code
 
-print(min_max(toDepth=1, playing_player=PLAYER1, state=START_STATE))
+print(min_max(toDepth=10, playing_player=PLAYER1, state=START_STATE))
