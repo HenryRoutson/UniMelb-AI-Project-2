@@ -1681,14 +1681,19 @@ def playerSquareBias(board : Board, player : Player) -> int :
   return counts[player] - counts[reversePlayer(player)]
    
 
-def heuristic(stateBeforeAction : State, action : Action, player : Player, whosMove : Player) -> float :
+
+
+DeriveBoardReturn = tuple[Board, bool]
+
+def heuristic(stateBeforeAction : State, playerNotWhosMove : Player, deriveBoardReturn : DeriveBoardReturn) -> float :
   # used to pick which value to expand
   # this is much better than expanding randomly
 
   heuristic_value = 0
 
-  reversedPlayer = reversePlayer(player)
-  stateAfterAction, isElim = deriveBoardWrapper(stateBeforeAction, [action], player)
+  stateAfterAction, isElim = deriveBoardReturn
+
+  reversedPlayer = reversePlayer(playerNotWhosMove)
 
   if len(stateBeforeAction.keys()) > 1 :
 
@@ -1705,7 +1710,7 @@ def heuristic(stateBeforeAction : State, action : Action, player : Player, whosM
     countsAfter = Counter(stateAfterAction.values())
 
     deltaOtherPlayersPieces = countsAfter[reversedPlayer] - countsBefore[reversedPlayer]
-    deltaThisPlayersPieces = countsAfter[player] - countsBefore[player]
+    deltaThisPlayersPieces = countsAfter[playerNotWhosMove] - countsBefore[playerNotWhosMove]
 
 
     heuristicSquareCountDifference = deltaThisPlayersPieces - deltaOtherPlayersPieces - MAX_PIECE_SIZE - 1 - 1
@@ -1928,14 +1933,20 @@ def reversePlayer(player : Player) -> Player :
   if player == PlayerColor.BLUE : return PlayerColor.RED
   assert(False)
 
+
+
+
 def whosMoveFromDepth(depth : int, playing : Player) -> Player :
 
   # tree root has no action and has moves for the player deciding where to move
 
-  if (depth % 2 == 1) : 
+  if not (depth % 2 == 1) : 
     return playing
   else : 
     return reversePlayer(playing)
+
+"""
+
 
 def makeMoveWith(initState : State, tree : GameTree, playerNotWhosMove: Player, isFirstMove : bool) -> GameTree :
   isMaxFirst = True
@@ -2015,7 +2026,7 @@ def mcts(player : Player, fromState : State, isFirstMove : bool, iterations : in
 
 
 
-
+"""
 
 def random_moves(player : Player, fromState : State, isFirstMove : bool) -> Action :
 
@@ -2041,6 +2052,55 @@ def greedy_moves(player : Player, fromState : State, isFirstMove : bool) -> Acti
 
 # ================================================================================
 # min max
+
+
+
+def min_max(stateBeforeAction : State, action : Action, playing_player : Player, toDepth : int, isFirstMove : bool, depth : int = 0, ) -> tuple[list[Action], float] :
+  whosMoveNotPlayer = whosMoveFromDepth(depth, playing_player)
+
+  deriveBoardReturn = deriveBoardWrapper(stateBeforeAction, [action], whosMoveNotPlayer) # TODO extract out of heuristic
+  (stateAfterAction, isElim) = deriveBoardReturn
+
+  if depth == toDepth : 
+    
+    return ([], heuristic(playerNotWhosMove= playing_player, stateBeforeAction=stateBeforeAction, deriveBoardReturn =deriveBoardReturn))
+  
+
+  stateWin = isStateWin(stateAfterAction)
+  if stateWin != None :
+    return ([], INF if playing_player == stateWin else -INF)
+
+  
+
+  if playing_player == whosMoveNotPlayer :
+
+    best_action : Optional[Action] = None
+    best_value : float = -INF
+    for action in getActionsFromState(stateAfterAction, playing_player, isFirstMove=isFirstMove) :
+        nextActions, cur_value = min_max(playing_player=playing_player, depth=depth + 1, toDepth=toDepth, stateBeforeAction=stateAfterAction, isFirstMove=isFirstMove, action =action)
+        if cur_value == max([cur_value, best_value]) :
+          best_value = cur_value
+          best_action = action
+          
+  else :
+     
+    best_action : Optional[Action] = None
+    best_value : float = INF
+    for action in getActionsFromState(stateAfterAction, playing_player, isFirstMove=isFirstMove) :
+        nextActions, cur_value = min_max(playing_player=playing_player, depth=depth + 1, toDepth=toDepth, stateBeforeAction=stateAfterAction, isFirstMove=isFirstMove, action =action)
+        if cur_value == min([cur_value, best_value]) :
+          best_value = cur_value
+          best_action = action
+
+
+  # 
+
+  assert(best_action != None) 
+
+  lst = [best_action]
+  lst.extend(nextActions)
+  return (lst, best_value)
+
 
 
 
@@ -2100,6 +2160,9 @@ class Agent:
 
         def get_action() :
            
+
+          return min_max(playing_player=self._color, toDepth=2, state=self.board_state, isFirstMove=self.firstMove)[0][0]
+
           return greedy_moves(self._color, self.board_state, isFirstMove=self.firstMove)
 
           # Note : mcts is archived as it is too slow
