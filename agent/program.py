@@ -549,7 +549,7 @@ def isPiecePlaceSquaresEmpty(place : PlaceAction, board : Board) -> bool :
 
 
 
-# HERE TODO
+# HERE TODO 
 def coordSquareNeighbors(coord : Coord) -> list[Coord] :
   return [
     coord.__add__(Direction.Up),
@@ -1680,13 +1680,25 @@ def heuristic(stateBeforeAction : State, action : Action, player : Player, whosM
     # this is expensive if you have a high branching factor
     # you should have lots of moves, your opponent should have few
 
-    heuristic_value += len(list(getSquaresAdjToColourAndEmpty(stateAfterAction, player)))
-    heuristic_value -= len(list(getSquaresAdjToColourAndEmpty(stateAfterAction, reversedPlayer)))
+    movesForThisPlayer = len(list(getSquaresAdjToColourAndEmpty(stateAfterAction, player))) / 10
+    heuristic_value -= len(list(getSquaresAdjToColourAndEmpty(stateAfterAction, reversedPlayer))) 
+
 
   if isElim :
-  
-    heuristicSquareCountDifference = playerSquareBias(stateAfterAction, player) - playerSquareBias(stateBeforeAction, player) - 8 # it should be better than just placing
+
+    countsBefore = Counter(stateBeforeAction.values())
+    countsAfter = Counter(stateAfterAction.values())
+
+    deltaOtherPlayersPieces = countsAfter[reversedPlayer] - countsBefore[reversedPlayer]
+    deltaThisPlayersPieces = countsAfter[player] - countsBefore[player]
+
+
+    heuristicSquareCountDifference = deltaThisPlayersPieces - deltaOtherPlayersPieces - MAX_PIECE_SIZE - 1 - 1
+    # -1 means break evens aren't taken, another -1 means they are later or by other player
+
+
     heuristic_value += heuristicSquareCountDifference * 1000 # if there is the possibility to eliminate, this should be important
+
 
   eliminationPrevention = - subTop3numberOfCoordsInColumnAndRows(stateAfterAction, player) + subTop3numberOfCoordsInColumnAndRows(stateAfterAction, reversedPlayer)
   heuristic_value += eliminationPrevention
@@ -2108,19 +2120,6 @@ class Agent:
         else : 
               
               action = get_action()
-
-
-        # if a good move, you won't eliminate more of your own pieces
-
-
-        if not (playerSquareBias(deriveBoard(self.board_state, [action], self._color)[0], self._color) >= playerSquareBias(self.board_state, self._color))  :
-           
-          print(heuristic(self.board_state, action, whosMove=self._color, player=self._color))
-          print(render_board(self.board_state))
-          print(render_board(deriveBoard(self.board_state, [action], self._color)[0]))
-          print(self._color)
-          assert(False)
-          
 
         #gc.collect() # reduce memory usage
         self.firstMove = False
