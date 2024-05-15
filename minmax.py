@@ -119,6 +119,8 @@ def whosMoveFromDepth(depth : int, playing : Player) -> Player :
 
 INF = float("inf")
 
+"""
+
 
 def min_max(playing_player : Player, toDepth : int, state : State = START_STATE) :
 
@@ -132,8 +134,12 @@ def min_max(playing_player : Player, toDepth : int, state : State = START_STATE)
           result = min_max_sub(toDepth = toDepth, state = state, depth = depth + 1, action=action)
           (action, score) = result
 
+          print(result, depth)
+
           if (min_or_max_f(score, best_score) != best_score) :
             (best_action, best_score) = result
+
+
 
           # Alpha beta pruning
           if isMax :
@@ -144,11 +150,13 @@ def min_max(playing_player : Player, toDepth : int, state : State = START_STATE)
           if (beta <= alpha) : break
           # 
 
+
+        print()
         return (best_action, best_score)
 
 
   def min_max_sub(toDepth : int, state : State, action : Optional[Action] = None, depth : int = 1, alpha : float = -INF, beta : float = INF) -> tuple[Optional[Action], float] :
-    print("depth :", depth)
+
 
     # calculate new state
     whosMove = whosMoveFromDepth(depth, playing_player)
@@ -166,7 +174,11 @@ def min_max(playing_player : Player, toDepth : int, state : State = START_STATE)
     if whosMove == PLAYER1 : assert(result[0] == 2)
     if whosMove == PLAYER2 : 
       if not (result[0] == -2) :
+
+        print()
         print( result)
+        
+        print("ERR")
         exit()
 
         # TODO fix this bug
@@ -178,6 +190,81 @@ def min_max(playing_player : Player, toDepth : int, state : State = START_STATE)
   return min_max_sub(toDepth=toDepth, state=state, action=None, depth=1, alpha=-INF, beta=INF)
 
 
+
+
+"""
+
+##############
+
+
+def whosMoveFromDepth(depth : int, playing : Player) -> Player :
+
+  # tree root has no action and has moves for the player deciding where to move
+
+  if not (depth % 2 == 1) : 
+    return playing
+  else : 
+    return reversePlayer(playing)
+
+
+
+
+
+
+def heuristic(state : State, player : Player) -> float :
+  # used to pick which value to expand
+  # this is much better than expanding randomly
+
+  # TODO in actual game implimentation, make this the number of columns and rows that the color is in
+
+  if player == PLAYER1 :
+    return state #* random.random()
+  else :
+    return -state
+  
+
+
+def min_max(playing_player : Player, toDepth : int, state : State, depth : int = 0) -> tuple[Optional[Action], float] :
+
+  if depth == toDepth : 
+    return (None, heuristic(state = state, player= playing_player))
+  
+  if isStateWin(state) != None :
+    return (None, INF if playing_player == isStateWin(state) else -INF)
+
+  whosMove = whosMoveFromDepth(depth, playing_player)
+
+  if playing_player == whosMove :
+
+    best_action : Optional[Action] = None
+    best_value : float = -INF
+    for action in getActionsFromState(state, playing_player) :
+        new_state = applyActionToState(state=state, action=action, whosMove=whosMove)
+        nextAction, cur_value = min_max(playing_player=playing_player, depth=depth + 1, toDepth=toDepth, state=new_state)
+        if cur_value == max([cur_value, best_value]) :
+          best_value = cur_value
+          best_action = action
+          
+  else :
+        
+    best_action : Optional[Action] = None
+    best_value : float = INF
+    for action in getActionsFromState(state, playing_player) :
+        new_state = applyActionToState(state=state, action=action, whosMove=whosMove)
+        nextAction, cur_value = min_max(playing_player=playing_player, depth=depth + 1, toDepth=toDepth, state=new_state)
+        if cur_value == min([cur_value, best_value]) :
+          best_value = cur_value
+          best_action = action
+
+  # 
+
+  assert(best_action != None) 
+  return (best_action, best_value)
+
+
+
+
+# RETRY
 
 
 
@@ -192,4 +279,4 @@ def min_max(playing_player : Player, toDepth : int, state : State = START_STATE)
 # ================================================================================
 # call code
 
-print(min_max(toDepth=4, playing_player=PLAYER1))
+print(min_max(toDepth=1, playing_player=PLAYER1, state=START_STATE))
