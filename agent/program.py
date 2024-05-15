@@ -621,20 +621,25 @@ def coordsEmpty(board : Board, coords : list[Coord]) -> list[Coord] :
 
 
 
+def getSquaresAdjToColourAndEmpty(board : Board, PlaceColour : PlayerColor) -> Iterable[Coord] :
+  coordsAdjToColour = set()
+  for coord in getCoordsOfColour(board, PlaceColour) :
+    coordsAdjToColour.update(coordSquareNeighbors(coord))
+
+  coordsAdjToColourAndEmpty = coordsEmpty(board, list(coordsAdjToColour))
+
+  return coordsAdjToColourAndEmpty
+
 def placeActionsFromBoard(board : Board, PlaceColour : PlayerColor) -> Iterable[PlaceAction]:
   # return a list of all pieces you can place connecting to a placeAction
 
   # TODO this could be so much faster
   # could do it based on coords with an adjacent piece
 
-  coordsAdjToColour = set()
-  for coord in getCoordsOfColour(board, PlaceColour) :
-    coordsAdjToColour.update(coordSquareNeighbors(coord))
-
-  coordsAdjToColourAndEmpty = coordsEmpty(board, list(coordsAdjToColour))
+  squaresAdjToColourAndEmpty = getSquaresAdjToColourAndEmpty(board, PlaceColour)
   
   placeOptions = set()
-  for coord in coordsAdjToColourAndEmpty :
+  for coord in squaresAdjToColourAndEmpty :
    placeOptions.update(coordPlaceOptions(board, coord))
 
   return placeOptions
@@ -1674,8 +1679,9 @@ def heuristic(stateBeforeAction : State, action : Action, player : Player, whosM
 
     # this is expensive if you have a high branching factor
     # you should have lots of moves, your opponent should have few
-    heuristic_value += len(list(getActionsFromState(stateAfterAction, PlaceColour = player, isFirstMove = False)))
-    heuristic_value -= len(list(getActionsFromState(stateAfterAction, PlaceColour = reversedPlayer, isFirstMove = False)))
+
+    heuristic_value += len(list(getSquaresAdjToColourAndEmpty(stateAfterAction, player)))
+    heuristic_value -= len(list(getSquaresAdjToColourAndEmpty(stateAfterAction, reversedPlayer)))
 
   if isElim :
   
