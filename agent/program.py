@@ -2072,19 +2072,11 @@ class Agent:
 
         def get_action() :
            
-          # if branching factor is too high, be quick and greedy
-
-
           return greedy_moves(self._color, self.board_state, isFirstMove=self.firstMove)
 
+          # Note : mcts is archived as it is too slow
+          # return mcts(self._color, self.board_state, iterations=ITERATIONS, isFirstMove=self.firstMove)
 
-
-
-          # mcts is archived as it is too slow
-          """
-          # if the branching factor is low, think ahead
-          return mcts(self._color, self.board_state, iterations=ITERATIONS, isFirstMove=self.firstMove)
-          """
 
         IS_PROFILE = True
 
