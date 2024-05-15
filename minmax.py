@@ -42,16 +42,16 @@ PLAYER2 = "negative"
 State = int
 Action = int
 
-def heuristic(state : State, player : Player) -> float :
+def heuristic(stateBefore : State, stateAfter : State, action : Action, player : Player) -> float :
   # used to pick which value to expand
   # this is much better than expanding randomly
 
   # TODO in actual game implimentation, make this the number of columns and rows that the color is in
 
   if player == PLAYER1 :
-    return state #* random.random()
+    return action #* random.random()
   else :
-    return -state
+    return -action
 
 
 def isStateWin(state : State) -> Optional[Player] :
@@ -147,20 +147,29 @@ def min_max(playing_player : Player, toDepth : int, state : State = START_STATE)
         return (best_action, best_score)
 
 
-  def min_max_sub(toDepth : int, state : State = START_STATE, action : Optional[Action] = None, depth : int = 1, alpha : float = -INF, beta : float = INF) -> tuple[Optional[Action], float] :
+  def min_max_sub(toDepth : int, state : State, action : Optional[Action] = None, depth : int = 1, alpha : float = -INF, beta : float = INF) -> tuple[Optional[Action], float] :
     print("depth :", depth)
 
     # calculate new state
     whosMove = whosMoveFromDepth(depth, playing_player)
-    state = applyActionToState(state, action, whosMove)
+    stateAfter = applyActionToState(state, action, whosMove)
 
     # base case
     if depth == toDepth : 
-      return (action, heuristic(state, playing_player))
+      assert(action) # depth shouldn't equal 1
+      return (action, heuristic(stateAfter=stateAfter, stateBefore=state, action=action, player=playing_player))
 
     # min or max case
     isMax = (whosMove == playing_player)
     result = min_max_helper(isMax=isMax, toDepth=toDepth, state=state, depth=depth, whosMove=whosMove, alpha= alpha, beta= beta)
+
+    if whosMove == PLAYER1 : assert(result[0] == 2)
+    if whosMove == PLAYER2 : 
+      if not (result[0] == -2) :
+        print( result)
+        exit()
+
+        # TODO fix this bug
 
     #
     return result

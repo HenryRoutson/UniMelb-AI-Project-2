@@ -527,9 +527,9 @@ def isPiecePlaceSquaresEmpty(place : PlaceAction, board : Board) -> bool :
 
 
 
+#
 
-
-def coordSquareNeighborsCompileTime(coord : Coord) -> list[Coord] :
+def coordSquareNeighborsCompileTime(coord : Coord) -> list[Coord] : # faster as list, leave as is
   return [
     coord.__add__(Direction.Up),
     coord.__add__(Direction.Down),
@@ -543,6 +543,33 @@ for coord in allCoords:
 
 def coordSquareNeighbors(coord : Coord) -> list[Coord] :
   return coordSquareNeighborsDict[coord]
+
+#
+
+"""
+def coord_2_SquareNeighborsCompileTime(coord : Coord) -> set[Coord] :
+
+  # could be more efficient but this is fine
+
+  neighbords = set()
+  for c1 in coordSquareNeighborsCompileTime(coord) :
+    neighbords.update(coordSquareNeighborsCompileTime(c1))
+
+  return neighbords
+
+coord_2_SquareNeighborsDict = dict()
+for coord in allCoords:
+   coordSquareNeighborsDict[coord] = coord_2_SquareNeighborsCompileTime(coord)
+
+def coord_2_SquareNeighbors(coord : Coord) -> list[Coord] :
+  return coord_2_SquareNeighborsDict[coord]
+
+"""
+
+
+
+
+
 
 
 
@@ -1688,8 +1715,9 @@ def heuristic(stateBeforeAction : State, action : Action, player : Player, whosM
     heuristic_value += heuristicSquareCountDifference * 1000 # if there is the possibility to eliminate, this should be important
 
 
-  #eliminationPrevention = - subTop3numberOfCoordsInColumnAndRows(stateAfterAction, player) + subTop3numberOfCoordsInColumnAndRows(stateAfterAction, reversedPlayer)
-  #heuristic_value += eliminationPrevention
+  # elimination prevention isn't that effective, as the board fills up and it's pointless
+  # eliminationPrevention = (- subTop3numberOfCoordsInColumnAndRows(stateAfterAction, player) + subTop3numberOfCoordsInColumnAndRows(stateAfterAction, reversedPlayer)) / 3
+  # heuristic_value += eliminationPrevention
 
   return heuristic_value
 
