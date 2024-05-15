@@ -1854,6 +1854,7 @@ def scoreFromwinProp(winProp : WinsAndGames) -> float : # TODO need to seperate 
 def updateWinsAndGames(winProp : WinsAndGames, didWin : bool) -> WinsAndGames :
   return (winProp[0] + didWin, winProp[1] + 1)
 
+"""
 def getMinOrMaxFromChildren_UCB(parent : GameTree, isMax) -> int :
   children = parent.children
 
@@ -1927,6 +1928,8 @@ def rolloutSim(state : State, whosMove : Player, depth : int) -> Optional[Player
 
   return tieBreaker(state)
 
+
+  """
 
 def reversePlayer(player : Player) -> Player :
   if player == PlayerColor.RED : return PlayerColor.BLUE
@@ -2038,13 +2041,13 @@ def random_moves(player : Player, fromState : State, isFirstMove : bool) -> Acti
 def greedy_moves(player : Player, fromState : State, isFirstMove : bool) -> Action :
 
   def heuristicFromAction(action : Action) :
-    return heuristic(stateBeforeAction=fromState, action=action, player=player, whosMove=player)
+    return heuristic(stateBeforeAction=fromState, playerNotWhosMove=player, deriveBoardReturn=deriveBoard(fromState, [action], player))
 
   actions = list(getActionsFromState(fromState, player, isFirstMove))
   actions.sort(key=heuristicFromAction, reverse=True)
 
   action = list(actions)[0] # can be an error here if no moves, this is fine
-  print(heuristic(stateBeforeAction=fromState, action=action, player=player, whosMove=player))
+  print(heuristicFromAction(action))
   printBoardPlaceAction([action], player)
 
   return action
@@ -2055,16 +2058,14 @@ def greedy_moves(player : Player, fromState : State, isFirstMove : bool) -> Acti
 
 
 
-def min_max(stateBeforeAction : State, action : Action, playing_player : Player, toDepth : int, isFirstMove : bool, depth : int = 0, ) -> tuple[list[Action], float] :
+def min_max(stateBeforeAction : State, deriveBoardReturn : DeriveBoardReturn, playing_player : Player, toDepth : int, isFirstMove : bool, depth : int = 0, ) -> tuple[list[Action], float] :
   whosMoveNotPlayer = whosMoveFromDepth(depth, playing_player)
 
-  deriveBoardReturn = deriveBoardWrapper(stateBeforeAction, [action], whosMoveNotPlayer) # TODO extract out of heuristic
-  (stateAfterAction, isElim) = deriveBoardReturn
 
   if depth == toDepth : 
-    
     return ([], heuristic(playerNotWhosMove= playing_player, stateBeforeAction=stateBeforeAction, deriveBoardReturn =deriveBoardReturn))
   
+  stateAfterAction : Board = deriveBoardReturn[0]
 
   stateWin = isStateWin(stateAfterAction)
   if stateWin != None :
@@ -2077,7 +2078,8 @@ def min_max(stateBeforeAction : State, action : Action, playing_player : Player,
     best_action : Optional[Action] = None
     best_value : float = -INF
     for action in getActionsFromState(stateAfterAction, playing_player, isFirstMove=isFirstMove) :
-        nextActions, cur_value = min_max(playing_player=playing_player, depth=depth + 1, toDepth=toDepth, stateBeforeAction=stateAfterAction, isFirstMove=isFirstMove, action =action)
+        
+        nextActions, cur_value = min_max(playing_player=playing_player, depth=depth + 1, toDepth=toDepth, stateBeforeAction=stateAfterAction, isFirstMove=isFirstMove, deriveBoardReturn=deriveBoard(stateAfterAction, [action], PlaceColour=whosMoveNotPlayer))
         if cur_value == max([cur_value, best_value]) :
           best_value = cur_value
           best_action = action
@@ -2087,7 +2089,7 @@ def min_max(stateBeforeAction : State, action : Action, playing_player : Player,
     best_action : Optional[Action] = None
     best_value : float = INF
     for action in getActionsFromState(stateAfterAction, playing_player, isFirstMove=isFirstMove) :
-        nextActions, cur_value = min_max(playing_player=playing_player, depth=depth + 1, toDepth=toDepth, stateBeforeAction=stateAfterAction, isFirstMove=isFirstMove, action =action)
+        nextActions, cur_value = min_max(playing_player=playing_player, depth=depth + 1, toDepth=toDepth, stateBeforeAction=stateAfterAction, isFirstMove=isFirstMove, deriveBoardReturn=deriveBoard(stateAfterAction, [action], PlaceColour=whosMoveNotPlayer))
         if cur_value == min([cur_value, best_value]) :
           best_value = cur_value
           best_action = action
@@ -2144,7 +2146,7 @@ class Agent:
         # init board state 
         self.board_state : Board = {}
         self.firstMove : bool = True # prob could use empty board, but could introduct weird bugs, this is easier
-              
+        self.didElim = False
 
 
     def action(self, **referee: dict) -> Action:
@@ -2159,9 +2161,9 @@ class Agent:
         # technique(s) to determine the best action to take.
 
         def get_action() :
-           
 
-          return min_max(playing_player=self._color, toDepth=2, state=self.board_state, isFirstMove=self.firstMove)[0][0]
+          deriveBoardReturn = self.board_state, self.didElim
+          return min_max(playing_player=self._color, toDepth=2, stateBeforeAction=self.board_state, isFirstMove=self.firstMove, deriveBoardReturn=deriveBoardReturn)[0][0]
 
           return greedy_moves(self._color, self.board_state, isFirstMove=self.firstMove)
 
@@ -2199,7 +2201,7 @@ class Agent:
         turn. You should use it to update the agent's internal game state. 
         """
 
-        self.board_state = deriveBoardWrapper(self.board_state, [action], color)[0]
+        self.board_state, self.didElim = deriveBoardWrapper(self.board_state, [action], color)
         
 
 
