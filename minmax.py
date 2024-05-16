@@ -224,7 +224,66 @@ def heuristic(state : State, player : Player) -> float :
   
 
 
-def min_max(playing_player : Player, toDepth : int, state : State, depth : int = 0, alpha : float = -INF, beta : float = INF) -> tuple[list[Action], float] :
+def min_max(playing_player : Player, toDepth : int, state : State, depth : int = 0) -> tuple[list[Action], float] :
+
+  # alpha represents best move for max player, so will only update on their move
+  # beta represents best move for min player, so will only update on their move
+
+  # the best next move for alpha is the worst move for beta, hence 
+
+  if depth == toDepth : 
+    return ([], heuristic(state = state, player= playing_player))
+
+  # TODO
+  """
+  if isStateWin(state) != None :
+    return ([], INF if playing_player == isStateWin(state) else -INF)
+  """
+
+  whosMove = whosMoveFromDepth(depth, playing_player)
+
+  best_action : Optional[Action] = None
+
+  if playing_player == whosMove :
+
+    best_value : float = -INF
+    for action in getActionsFromState(state, playing_player) :
+        new_state = applyActionToState(state=state, action=action, whosMove=whosMove)
+        nextActions, cur_value = min_max(playing_player=playing_player, depth=depth + 1, toDepth=toDepth, state=new_state)
+
+        if cur_value > best_value :
+          best_value = cur_value
+          best_action = action
+          best_nextActions = nextActions
+
+          
+  else :
+        
+
+    
+    best_value  = INF
+    for action in getActionsFromState(state, playing_player) :
+        new_state = applyActionToState(state=state, action=action, whosMove=whosMove)
+        nextActions, cur_value = min_max(playing_player=playing_player, depth=depth + 1, toDepth=toDepth, state=new_state)
+
+        if cur_value < best_value :
+          best_value = cur_value
+          best_action  = action
+          best_nextActions = nextActions
+
+  # 
+
+  assert(best_action != None) 
+
+  lst = [best_action]
+  lst.extend(best_nextActions)
+  return (lst, best_value)
+
+
+  
+
+
+def min_max_alpha_beta(playing_player : Player, toDepth : int, state : State, depth : int = 0, alpha : float = -INF, beta : float = INF) -> tuple[list[Action], float] :
   # TODO clould indent other min for perf
   
   # alpha represents best move for max player, so will only update on their move
@@ -253,7 +312,7 @@ def min_max(playing_player : Player, toDepth : int, state : State, depth : int =
     best_value : float = -INF
     for action in getActionsFromState(state, playing_player) :
         new_state = applyActionToState(state=state, action=action, whosMove=whosMove)
-        nextActions, cur_value = min_max(playing_player=playing_player, depth=depth + 1, toDepth=toDepth, state=new_state, alpha=alpha, beta=beta)
+        nextActions, cur_value = min_max_alpha_beta(playing_player=playing_player, depth=depth + 1, toDepth=toDepth, state=new_state, alpha=alpha, beta=beta)
 
         if cur_value > best_value :
           best_value = cur_value
@@ -270,7 +329,7 @@ def min_max(playing_player : Player, toDepth : int, state : State, depth : int =
     best_value  = INF
     for action in getActionsFromState(state, playing_player) :
         new_state = applyActionToState(state=state, action=action, whosMove=whosMove)
-        nextActions, cur_value = min_max(playing_player=playing_player, depth=depth + 1, toDepth=toDepth, state=new_state, alpha=alpha, beta=beta)
+        nextActions, cur_value = min_max_alpha_beta(playing_player=playing_player, depth=depth + 1, toDepth=toDepth, state=new_state, alpha=alpha, beta=beta)
 
         if cur_value < best_value :
           best_value = cur_value
@@ -286,6 +345,8 @@ def min_max(playing_player : Player, toDepth : int, state : State, depth : int =
 
   lst = [best_action]
   lst.extend(best_nextActions)
+
+
   return (lst, best_value)
 
 
@@ -306,4 +367,13 @@ def min_max(playing_player : Player, toDepth : int, state : State, depth : int =
 # ================================================================================
 # call code
 
-print(min_max(toDepth=8, playing_player=PLAYER1, state=START_STATE))
+
+
+for _ in range(1000): 
+
+  toDepth = 5
+
+  alphaBeta = min_max_alpha_beta(toDepth=toDepth, playing_player=PLAYER1, state=START_STATE)
+  notAlphaBeta = min_max(toDepth=toDepth, playing_player=PLAYER1, state=START_STATE)
+
+  assert(alphaBeta == notAlphaBeta)
