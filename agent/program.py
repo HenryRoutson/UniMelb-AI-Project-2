@@ -937,9 +937,9 @@ GENERATED_PIECE_PLACEMENTS : list[PlaceAction] = [
    Coord(4,3),
   ),
   PlaceAction(
+   Coord(4,4),
    Coord(5,3),
    Coord(6,3),
-   Coord(4,4),
    Coord(4,3),
   ),
   PlaceAction(
@@ -973,10 +973,10 @@ GENERATED_PIECE_PLACEMENTS : list[PlaceAction] = [
    Coord(3,5),
   ),
   PlaceAction(
+   Coord(4,4),
    Coord(5,3),
    Coord(5,4),
    Coord(6,3),
-   Coord(4,4),
   ),
   PlaceAction(
    Coord(4,4),
@@ -1093,9 +1093,9 @@ GENERATED_PIECE_PLACEMENTS : list[PlaceAction] = [
    Coord(4,3),
   ),
   PlaceAction(
+   Coord(4,4),
    Coord(5,3),
    Coord(5,4),
-   Coord(4,4),
    Coord(4,3),
   ),
   PlaceAction(
@@ -1112,9 +1112,9 @@ GENERATED_PIECE_PLACEMENTS : list[PlaceAction] = [
   ),
   PlaceAction(
    Coord(4,4),
-   Coord(2,4),
    Coord(5,4),
    Coord(3,4),
+   Coord(2,4),
   ),
 ]
 
@@ -1178,9 +1178,15 @@ def coordsToPlaceAction(coords : list[Coord]) -> PlaceAction :
   return PlaceAction(coords[0], coords[1], coords[2], coords[3])
 
 
-def placeActionToOrderedCoords(place : PlaceAction) -> list[Coord] :
-  return sorted([place.c1, place.c2, place.c3, place.c4])
+def sortedCoords(coords : list[Coord]) -> list[Coord] :
+  return sorted(coords, key = lambda coord : (coord.r, coord.c)  )
 
+
+def placeActionToOrderedCoords(place : PlaceAction) -> list[Coord] :
+  return sortedCoords(list(place.coords))
+
+def orderPlaceAction(place : PlaceAction) -> PlaceAction :
+  return coordsToPlaceAction(placeActionToOrderedCoords(place))
 
 
 
@@ -1391,7 +1397,7 @@ def rotatePiece90(place : PlaceAction) -> PlaceAction :
   rotatedAndMovedVectors : map[Vector2] = map(lambda vec : vec - offset, rotatedVectors)
   rotatedAndMovedCoords : list[Coord] = list(map(Vec2ToCoord, rotatedAndMovedVectors))
 
-  return coordsToPlaceAction(rotatedAndMovedCoords)
+  return orderPlaceAction(coordsToPlaceAction(sortedCoords(rotatedAndMovedCoords))) # eh
 
 
 def printPlaceAction(place : PlaceAction) :
@@ -1405,39 +1411,49 @@ def printPlaceAction(place : PlaceAction) :
 def allPlaceOptionsForPiecesThroughCenter(pieces : PlaceActionLst) -> PlaceActionLst :
   print("COMPILE TIME CODE")
 
+
   BOARD_WITH_CENTER = { CENTER : PlayerColor.BLUE } # visuliase the center
+
 
   place_options : set[frozenset[Coord]] = set() # used to avoid duplicates
 
 
   for piece in pieces :
 
+    piece : PlaceAction = orderPlaceAction(movePlaceActionIndexToCoord(piece, 0, CENTER))
+    assert(CENTER in piece.coords)
+
+    p0 = rotatePiece90(rotatePiece90(rotatePiece90(rotatePiece90(piece))))
+    p1 = movePlaceActionIndexToCoord(p0, 0, CENTER)
+
+    assert(orderPlaceAction(p1) == orderPlaceAction(piece))
+
     for i in range(MAX_PIECE_SIZE) : # each of the piece of the place action
 
       for _ in range(4) : # covers all rotations, cache as this can be quite complex
-
+        
         piece = rotatePiece90(piece) # i don't think the rotation point should matter as long as it avoids negative numbers
-        new_piece : PlaceAction = movePlaceActionIndexToCoord(piece, i, CENTER)
+        piece : PlaceAction = movePlaceActionIndexToCoord(piece, i, CENTER)
 
-        already_found = new_piece.coords in place_options
+        already_found = piece.coords in place_options
         # print("already_found " + str(already_found))
 
         if (not already_found) :
 
-          assert(CENTER in new_piece.coords) 
+          assert(CENTER in piece.coords) 
 
           visulising = True
           if visulising :
 
             print("GENERATING FOUND")
-            print("new_piece " + str(new_piece))
-            print(render_board(deriveBoard(BOARD_WITH_CENTER, [new_piece], PlayerColor.RED)[0]))
+            print("new_piece " + str(piece))
+            print(render_board(deriveBoard(BOARD_WITH_CENTER, [piece], PlayerColor.RED)[0]))
           
           else : # generating
 
-            printPlaceAction(new_piece)
+            printPlaceAction(piece)
             
-          place_options.add(frozenset(new_piece.coords))
+          place_options.add(frozenset(piece.coords))
 
 
   assert(len(place_options) != 0)
@@ -1819,7 +1835,7 @@ def getSortedActionsFromState(state : State, player : Player, PlaceColour : Play
   def sort_action_result(action_result : tuple[Action, tuple[Board, bool]]) -> float :
      (action, result) = action_result
 
-     return heuristic(stateBeforeAction=state, playerNotWhosMove=player, deriveBoardReturn=result, smother=True)
+     return heuristic(stateBeforeAction=state, playerNotWhosMove=player, deriveBoardReturn=result, smother=False)
 
   action_result.sort(key=sort_action_result, reverse=True)
   return action_result
@@ -2285,8 +2301,8 @@ class Agent:
 
 
           # if branching factor is high, be greedy
-          if len(self.board_state.keys()) < BOARD_N * BOARD_N * 0.7 :
-              return greedy_moves(self._color, self.board_state, isFirstMove=self.firstMove)
+          #if len(self.board_state.keys()) < BOARD_N * BOARD_N * 0.7 :
+          #    return greedy_moves(self._color, self.board_state, isFirstMove=self.firstMove)
 
           # otherwise you can think ahead
           deriveBoardReturn = self.board_state, self.didElim
