@@ -246,7 +246,7 @@ def min_max(playing_player : Player, toDepth : int, state : State, depth : int =
           best_action = action
 
         alpha = max(alpha, cur_value)
-        #if beta <= alpha : break
+        if beta <= alpha : break
     
           
   else :
@@ -260,8 +260,8 @@ def min_max(playing_player : Player, toDepth : int, state : State, depth : int =
           best_value = cur_value
           best_action = action
 
-        beta = max(beta, cur_value)
-        #if beta <= alpha : break
+        beta = min(beta, cur_value)
+        if beta <= alpha : break
 
   # 
 
