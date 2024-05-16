@@ -68,7 +68,7 @@ def tieBreaker(state : State) -> Player :
 
 
 def getActionsFromState(state : State, player : Player) -> list[Action] :
-  x = [1, -1] 
+  x = [2, 1, -1, -2] 
   #random.shuffle(x)
   return x
 
@@ -306,4 +306,4 @@ def min_max(playing_player : Player, toDepth : int, state : State, depth : int =
 # ================================================================================
 # call code
 
-print(min_max(toDepth=2, playing_player=PLAYER1, state=START_STATE))
+print(min_max(toDepth=4, playing_player=PLAYER1, state=START_STATE))
