@@ -2072,9 +2072,10 @@ def min_max(stateBeforeAction : State, deriveBoardReturn : DeriveBoardReturn, pl
     best_value : float = -INF
     for action in getActionsFromState(stateAfterAction, playing_player, isFirstMove=isFirstMove) :
         nextActions, cur_value = min_max(playing_player=playing_player, depth=depth + 1, toDepth=toDepth, stateBeforeAction=stateAfterAction, isFirstMove=isFirstMove, deriveBoardReturn=deriveBoard(stateAfterAction, [action], PlaceColour=whosMoveNotPlayer))
-        if cur_value == max([cur_value, best_value]) :
+        if cur_value > best_value :
           best_value = cur_value
           best_action = action
+          best_nextActions = nextActions
           
   else :
      
@@ -2082,9 +2083,10 @@ def min_max(stateBeforeAction : State, deriveBoardReturn : DeriveBoardReturn, pl
     best_value : float = INF
     for action in getActionsFromState(stateAfterAction, playing_player, isFirstMove=isFirstMove) :
         nextActions, cur_value = min_max(playing_player=playing_player, depth=depth + 1, toDepth=toDepth, stateBeforeAction=stateAfterAction, isFirstMove=isFirstMove, deriveBoardReturn=deriveBoard(stateAfterAction, [action], PlaceColour=whosMoveNotPlayer))
-        if cur_value == min([cur_value, best_value]) :
+        if cur_value < best_value :
           best_value = cur_value
           best_action = action
+          best_nextActions = nextActions
 
 
   # 
@@ -2092,7 +2094,7 @@ def min_max(stateBeforeAction : State, deriveBoardReturn : DeriveBoardReturn, pl
   assert(best_action != None) 
 
   lst = [best_action]
-  lst.extend(nextActions)
+  lst.extend(best_nextActions)
 
   assert(len(lst) != 0)
   return (lst, best_value)
