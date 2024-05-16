@@ -258,20 +258,24 @@ def min_max(playing_player : Player, toDepth : int, state : State, depth : int =
         if cur_value > best_value :
           best_value = cur_value
           best_action = action
+          best_nextActions = nextActions
 
         alpha = max(alpha, cur_value)
         if beta <= alpha : break
           
   else :
         
-    best_value : float = INF
+
+    
+    best_value  = INF
     for action in getActionsFromState(state, playing_player) :
         new_state = applyActionToState(state=state, action=action, whosMove=whosMove)
         nextActions, cur_value = min_max(playing_player=playing_player, depth=depth + 1, toDepth=toDepth, state=new_state, alpha=alpha, beta=beta)
 
         if cur_value < best_value :
           best_value = cur_value
-          best_action = action
+          best_action  = action
+          best_nextActions = nextActions
 
         beta = min(beta, cur_value)
         if beta <= alpha : break
@@ -281,7 +285,7 @@ def min_max(playing_player : Player, toDepth : int, state : State, depth : int =
   assert(best_action != None) 
 
   lst = [best_action]
-  lst.extend(nextActions)
+  lst.extend(best_nextActions)
   return (lst, best_value)
 
 
