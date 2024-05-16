@@ -224,7 +224,7 @@ def heuristic(state : State, player : Player) -> float :
   
 
 
-def min_max(playing_player : Player, toDepth : int, state : State, depth : int = 0, alpha : float = -INF, beta : float = -INF) -> tuple[list[Action], float] :
+def min_max(playing_player : Player, toDepth : int, state : State, depth : int = 0, alpha : float = -INF, beta : float = INF) -> tuple[list[Action], float] :
 
   if depth == toDepth : 
     return ([], heuristic(state = state, player= playing_player))
