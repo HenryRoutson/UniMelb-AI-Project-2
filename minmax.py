@@ -68,8 +68,8 @@ def tieBreaker(state : State) -> Player :
 
 
 def getActionsFromState(state : State, player : Player) -> list[Action] :
-  x = [2, 1, -1, -2]
-  random.shuffle(x)
+  x = [1, -1, 2, -2]
+  #random.shuffle(x)
   return x
 
 
@@ -225,7 +225,7 @@ def heuristic(state : State, player : Player) -> float :
 
 
 def min_max(playing_player : Player, toDepth : int, state : State, depth : int = 0, alpha : float = -INF, beta : float = INF) -> tuple[list[Action], float] :
-
+  # TODO clould indent other min for perf
   if depth == toDepth : 
     return ([], heuristic(state = state, player= playing_player))
   
@@ -249,7 +249,6 @@ def min_max(playing_player : Player, toDepth : int, state : State, depth : int =
 
         alpha = max(alpha, cur_value)
         if beta <= alpha : break
-    
           
   else :
         
