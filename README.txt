@@ -8,6 +8,11 @@ python -m referee random_agent random_agent
 python -m referee random_agent agent  
 
 
+python -m referee -t 180 random_agent agent  
+
+
+
+
 python -m referee -t 1000000 agent agent 
 
 

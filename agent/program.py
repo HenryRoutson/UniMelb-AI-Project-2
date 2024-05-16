@@ -1475,7 +1475,7 @@ def generate_GENERATED_PIECE_PLACEMENTS() :
 
 
 #
-generate_GENERATED_PIECE_PLACEMENTS()
+#generate_GENERATED_PIECE_PLACEMENTS()
 
 
 
@@ -2299,14 +2299,15 @@ class Agent:
 
         def get_action() :
 
+          isSparseBoard = len(self.board_state.keys()) < BOARD_N * BOARD_N * 0.7 # if branching factor is high, be greedy
+          isLowOnTime = referee["time_remaining"] and referee["time_remaining"] < 25
+          if isSparseBoard or isLowOnTime :
+              print("Greedy <")
+              return greedy_moves(self._color, self.board_state, isFirstMove=self.firstMove)
 
-          # if branching factor is high, be greedy
-          #if len(self.board_state.keys()) < BOARD_N * BOARD_N * 0.7 :
-          #    return greedy_moves(self._color, self.board_state, isFirstMove=self.firstMove)
-
-          # otherwise you can think ahead
-          deriveBoardReturn = self.board_state, self.didElim
-          return min_max_alphaBeta(playing_player=self._color, toDepth=2, stateBeforeAction=self.board_state, isFirstMove=self.firstMove, deriveBoardReturn=deriveBoardReturn)[0][0]
+          # otherwise you can think ahead, get out of tough spots
+          print("AlphaBeta <")
+          return min_max_alphaBeta(playing_player=self._color, toDepth=2, stateBeforeAction=self.board_state, isFirstMove=self.firstMove, deriveBoardReturn=(self.board_state, self.didElim))[0][0]
 
           
 
