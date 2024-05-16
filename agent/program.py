@@ -2161,7 +2161,6 @@ class Agent:
         def get_action() :
 
           deriveBoardReturn = self.board_state, self.didElim
-          print( min_max(playing_player=self._color, toDepth=2, stateBeforeAction=self.board_state, isFirstMove=self.firstMove, deriveBoardReturn=deriveBoardReturn)[0])
           return min_max(playing_player=self._color, toDepth=2, stateBeforeAction=self.board_state, isFirstMove=self.firstMove, deriveBoardReturn=deriveBoardReturn)[0][0]
 
           return greedy_moves(self._color, self.board_state, isFirstMove=self.firstMove)

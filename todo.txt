@@ -1,8 +1,37 @@
 
+min max performance
 
 
-
-Tune heuristic
-
-switch to min max
-
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+        1    0.000    0.000   55.809   55.809 program.py:2161(get_action)
+  27028/2    0.593    0.000   55.809   27.904 program.py:2061(min_max)
+    27026    0.783    0.000   23.672    0.001 program.py:687(deriveBoard)
+    27026    0.080    0.000   19.653    0.001 program.py:342(boardEliminateFilledRowsOrColumnsWrapper)
+    27026    0.245    0.000   19.573    0.001 program.py:391(boardEliminateFilledRowsOrColumns)
+    27026    0.289    0.000   19.266    0.001 program.py:373(columnsAndRowsFullyOccupied)
+   217018    2.370    0.000   18.430    0.000 {method 'update' of 'set' objects}
+    26903    0.358    0.000   17.595    0.001 program.py:1688(heuristic)
+    27028    1.097    0.000   17.166    0.001 program.py:639(getSquaresAdjToColourAndEmpty)
+    27026    8.148    0.000   15.144    0.001 program.py:362(columnsAndRowsOccupied)
+      125    0.001    0.000   13.525    0.108 program.py:1749(getActionsFromState)
+      125    0.012    0.000   13.524    0.108 program.py:648(placeActionsFromBoard)
+    66800    0.253    0.000    8.621    0.000 program.py:623(makeThrough)
+    66800    1.158    0.000    8.368    0.000 program.py:866(offsetPlaceAction)
+    27028    1.051    0.000    7.219    0.000 program.py:634(coordsEmpty)
+  5677433    6.996    0.000    6.996    0.000 {method 'add' of 'set' objects}
+   645600    2.854    0.000    6.168    0.000 program.py:635(<lambda>)
+3668053/3559297    4.036    0.000    4.248    0.000 {built-in method builtins.hash}
+   267200    0.661    0.000    4.000    0.000 program.py:871(<lambda>)
+    66800    0.175    0.000    3.915    0.000 program.py:620(filterByBoardSquaresBeingEmpty)
+    66800    0.562    0.000    3.740    0.000 program.py:520(isPiecePlaceSquaresEmpty)
+    27026    1.745    0.000    3.707    0.000 program.py:359(missingCoords)
+   160626    1.499    0.000    3.447    0.000 actions.py:20(coords)
+   267200    1.187    0.000    3.339    0.000 coord.py:114(__add__)
+  1196508    1.981    0.000    1.981    0.000 <string>:2(__eq__)
+    27028    1.356    0.000    1.955    0.000 program.py:425(getCoordsOfColour)
+   215682    0.861    0.000    1.893    0.000 program.py:544(coordSquareNeighbors)
+    27026    0.850    0.000    1.860    0.000 program.py:663(qcopy)
+   194338    0.816    0.000    1.752    0.000 program.py:517(isSquareEmpty)
+  1001971    1.382    0.000    1.382    0.000 {method 'keys' of 'dict' objects}
+    66800    0.333    0.000    0.905    0.000 coord.py:120(__sub__)
+    66800    0.291    0.000    0.876    0.000 program.py:856(coordsToPlaceAction)
