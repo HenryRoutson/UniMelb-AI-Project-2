@@ -2105,6 +2105,57 @@ def min_max(stateBeforeAction : State, deriveBoardReturn : DeriveBoardReturn, pl
 
 
 
+def min_max_alphaBeta(stateBeforeAction : State, deriveBoardReturn : DeriveBoardReturn, playing_player : Player, toDepth : int, isFirstMove : bool, depth : int = 0, alpha : float = -INF, beta : float = INF) -> tuple[list[Action], float] :
+  whosMoveNotPlayer = whosMoveFromDepth(depth, playing_player)
+
+  stateAfterAction : Board = deriveBoardReturn[0]
+  stateWin = isStateWin(stateAfterAction)
+  if not isFirstMove and stateWin != None :
+    print("win at depth", depth)
+    return ([], INF if playing_player == stateWin else -INF)
+
+  if depth == toDepth : 
+    return ([], heuristic(playerNotWhosMove= playing_player, stateBeforeAction=stateBeforeAction, deriveBoardReturn =deriveBoardReturn))
+
+  if playing_player == whosMoveNotPlayer :
+
+    best_action : Optional[Action] = None
+    best_value : float = -INF
+    for action in getActionsFromState(stateAfterAction, playing_player, isFirstMove=isFirstMove) :
+        nextActions, cur_value = min_max_alphaBeta(alpha=alpha, beta=beta, playing_player=playing_player, depth=depth + 1, toDepth=toDepth, stateBeforeAction=stateAfterAction, isFirstMove=isFirstMove, deriveBoardReturn=deriveBoard(stateAfterAction, [action], PlaceColour=whosMoveNotPlayer))
+        if cur_value > best_value :
+          best_value = cur_value
+          best_action = action
+          best_nextActions = nextActions
+          
+  else :
+     
+    best_action : Optional[Action] = None
+    best_value : float = INF
+    for action in getActionsFromState(stateAfterAction, playing_player, isFirstMove=isFirstMove) :
+        nextActions, cur_value = min_max_alphaBeta(alpha=alpha, beta=beta, playing_player=playing_player, depth=depth + 1, toDepth=toDepth, stateBeforeAction=stateAfterAction, isFirstMove=isFirstMove, deriveBoardReturn=deriveBoard(stateAfterAction, [action], PlaceColour=whosMoveNotPlayer))
+        if cur_value < best_value :
+          best_value = cur_value
+          best_action = action
+          best_nextActions = nextActions
+
+
+  # 
+
+  assert(best_action != None) 
+
+  lst = [best_action]
+  lst.extend(best_nextActions)
+
+  assert(len(lst) != 0)
+
+  return (lst, best_value)
+
+
+
+
+
+
 # ================================================================================
 # call code
 
@@ -2159,7 +2210,7 @@ class Agent:
         def get_action() :
 
           deriveBoardReturn = self.board_state, self.didElim
-          return min_max(playing_player=self._color, toDepth=2, stateBeforeAction=self.board_state, isFirstMove=self.firstMove, deriveBoardReturn=deriveBoardReturn)[0][0]
+          return min_max_alphaBeta(playing_player=self._color, toDepth=2, stateBeforeAction=self.board_state, isFirstMove=self.firstMove, deriveBoardReturn=deriveBoardReturn)[0][0]
 
           #return greedy_moves(self._color, self.board_state, isFirstMove=self.firstMove)
 
