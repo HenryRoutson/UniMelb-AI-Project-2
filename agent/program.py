@@ -406,6 +406,7 @@ def boardEliminateFilledRowsOrColumns(board : Board) -> tuple[Board, bool] :
 
 
 
+
 ########################################################################################################################
 ########################################################################################################################
 ########################################################################################################################
@@ -925,13 +926,13 @@ GENERATED_PIECE_PLACEMENTS : list[PlaceAction] = [
   ),
   PlaceAction(
    Coord(4,4),
-   Coord(3,3),
-   Coord(4,2),
+   Coord(5,4),
+   Coord(3,4),
    Coord(4,3),
   ),
   PlaceAction(
    Coord(4,4),
-   Coord(5,4),
+   Coord(3,3),
    Coord(4,2),
    Coord(4,3),
   ),
@@ -943,9 +944,21 @@ GENERATED_PIECE_PLACEMENTS : list[PlaceAction] = [
   ),
   PlaceAction(
    Coord(4,4),
+   Coord(5,4),
+   Coord(4,2),
+   Coord(4,3),
+  ),
+  PlaceAction(
+   Coord(4,4),
    Coord(4,5),
    Coord(3,3),
    Coord(3,4),
+  ),
+  PlaceAction(
+   Coord(4,4),
+   Coord(5,3),
+   Coord(5,4),
+   Coord(5,5),
   ),
   PlaceAction(
    Coord(4,4),
@@ -1080,9 +1093,9 @@ GENERATED_PIECE_PLACEMENTS : list[PlaceAction] = [
    Coord(4,3),
   ),
   PlaceAction(
-   Coord(4,4),
    Coord(5,3),
    Coord(5,4),
+   Coord(4,4),
    Coord(4,3),
   ),
   PlaceAction(
@@ -1166,7 +1179,7 @@ def coordsToPlaceAction(coords : list[Coord]) -> PlaceAction :
 
 
 def placeActionToOrderedCoords(place : PlaceAction) -> list[Coord] :
-  return [place.c1, place.c2, place.c3, place.c4]
+  return sorted([place.c1, place.c2, place.c3, place.c4])
 
 
 
@@ -1231,7 +1244,7 @@ assert(a)
 
 def movePlaceActionIndexToCoord(place : PlaceAction, index : int, coord : Coord) -> PlaceAction :
   other_coord = placeActionToOrderedCoords(place)[index]
-  return offsetPlaceAction(place, coord, other_coord)
+  return offsetPlaceActionCompileTime(place, coord, other_coord)
 
 
 def adjacentTo(place : PlaceAction, to : Coord) -> bool :
@@ -1446,7 +1459,7 @@ def generate_GENERATED_PIECE_PLACEMENTS() :
 
 
 #
-#generate_GENERATED_PIECE_PLACEMENTS()
+generate_GENERATED_PIECE_PLACEMENTS()
 
 
 
@@ -1797,6 +1810,21 @@ def getActionsFromState(state : State, PlaceColour : PlayerColor, isFirstMove : 
 
 
 
+def getSortedActionsFromState(state : State, player : Player, PlaceColour : PlayerColor, isFirstMove : bool) -> list[tuple[Action, DeriveBoardReturn]] :
+
+  actions = getActionsFromState(state, PlaceColour, isFirstMove)
+  action_result = list(zip(actions, [deriveBoardWrapper(state, [action], PlaceColour) for action in actions]))
+     
+
+  def sort_action_result(action_result : tuple[Action, tuple[Board, bool]]) -> float :
+     (action, result) = action_result
+
+     return heuristic(stateBeforeAction=state, playerNotWhosMove=player, deriveBoardReturn=result, smother=True)
+
+  action_result.sort(key=sort_action_result, reverse=True)
+  return action_result
+
+
 
 
 def applyActionToState(state : State, action : Action, PlaceColour : PlayerColor) -> State :
@@ -2081,7 +2109,8 @@ def greedy_moves(player : Player, fromState : State, isFirstMove : bool) -> Acti
 # ================================================================================
 # min max
 
-
+"""
+# used for testing
 
 def min_max(stateBeforeAction : State, deriveBoardReturn : DeriveBoardReturn, playing_player : Player, toDepth : int, isFirstMove : bool, depth : int = 0) -> tuple[list[Action], float] :
   whosMoveNotPlayer = whosMoveFromDepth(depth, playing_player)
@@ -2093,7 +2122,7 @@ def min_max(stateBeforeAction : State, deriveBoardReturn : DeriveBoardReturn, pl
     return ([], INF if playing_player == stateWin else -INF)
 
   if depth == toDepth : 
-    return ([], heuristic(playerNotWhosMove= playing_player, stateBeforeAction=stateBeforeAction, deriveBoardReturn =deriveBoardReturn))
+    return ([], heuristic(playerNotWhosMove= playing_player, stateBeforeAction=stateBeforeAction, deriveBoardReturn =deriveBoardReturn, smother = False ))
 
   if playing_player == whosMoveNotPlayer :
 
@@ -2129,7 +2158,7 @@ def min_max(stateBeforeAction : State, deriveBoardReturn : DeriveBoardReturn, pl
   return (lst, best_value)
 
 
-
+"""
 
 
 
@@ -2145,13 +2174,28 @@ def min_max_alphaBeta(stateBeforeAction : State, deriveBoardReturn : DeriveBoard
 
   if depth == toDepth : 
     return ([], heuristic(playerNotWhosMove= playing_player, stateBeforeAction=stateBeforeAction, deriveBoardReturn =deriveBoardReturn, smother = False))
+  
+
+  #
+  zipped_action_derivedResult = getSortedActionsFromState(state=stateAfterAction, player=playing_player, PlaceColour=whosMoveNotPlayer, isFirstMove=isFirstMove)
+
+
+  if len(zipped_action_derivedResult) == 0 :
+    return ([], -INF if playing_player == stateWin else INF)
+
+  if depth != 0 :
+    zipped_action_derivedResult = zipped_action_derivedResult[:10] # only take best actions for time efficiency
+  best_action : Optional[Action] = None
+
 
   if playing_player == whosMoveNotPlayer :
 
-    best_action : Optional[Action] = None
+    
     best_value : float = -INF
-    for action in getActionsFromState(stateAfterAction, playing_player, isFirstMove=isFirstMove) :
-        nextActions, cur_value = min_max_alphaBeta(alpha=alpha, beta=beta, playing_player=playing_player, depth=depth + 1, toDepth=toDepth, stateBeforeAction=stateAfterAction, isFirstMove=isFirstMove, deriveBoardReturn=deriveBoard(stateAfterAction, [action], PlaceColour=whosMoveNotPlayer))
+
+    
+    for action, deriveBoardReturn in  zipped_action_derivedResult:
+        nextActions, cur_value = min_max_alphaBeta(alpha=alpha, beta=beta, playing_player=playing_player, depth=depth + 1, toDepth=toDepth, stateBeforeAction=stateAfterAction, isFirstMove=isFirstMove, deriveBoardReturn=deriveBoardReturn)
         if cur_value > best_value :
           best_value = cur_value
           best_action = action
@@ -2159,10 +2203,11 @@ def min_max_alphaBeta(stateBeforeAction : State, deriveBoardReturn : DeriveBoard
           
   else :
      
-    best_action : Optional[Action] = None
+
     best_value : float = INF
-    for action in getActionsFromState(stateAfterAction, playing_player, isFirstMove=isFirstMove) :
-        nextActions, cur_value = min_max_alphaBeta(alpha=alpha, beta=beta, playing_player=playing_player, depth=depth + 1, toDepth=toDepth, stateBeforeAction=stateAfterAction, isFirstMove=isFirstMove, deriveBoardReturn=deriveBoard(stateAfterAction, [action], PlaceColour=whosMoveNotPlayer))
+
+    for action, deriveBoardReturn in  zipped_action_derivedResult:
+        nextActions, cur_value = min_max_alphaBeta(alpha=alpha, beta=beta, playing_player=playing_player, depth=depth + 1, toDepth=toDepth, stateBeforeAction=stateAfterAction, isFirstMove=isFirstMove, deriveBoardReturn=deriveBoardReturn)
         if cur_value < best_value :
           best_value = cur_value
           best_action = action
@@ -2253,7 +2298,7 @@ class Agent:
           """ return mcts(self._color, self.board_state, iterations=ITERATIONS, isFirstMove=self.firstMove) """
 
 
-        IS_PROFILE = True
+        IS_PROFILE = False
 
         if IS_PROFILE :
 
