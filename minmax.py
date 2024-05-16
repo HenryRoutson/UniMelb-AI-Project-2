@@ -224,7 +224,7 @@ def heuristic(state : State, player : Player) -> float :
   
 
 
-def min_max(playing_player : Player, toDepth : int, state : State, depth : int = 0) -> tuple[list[Action], float] :
+def min_max(playing_player : Player, toDepth : int, state : State, depth : int = 0, alpha : float = -INF, beta : float = -INF) -> tuple[list[Action], float] :
 
   if depth == toDepth : 
     return ([], heuristic(state = state, player= playing_player))
@@ -240,10 +240,14 @@ def min_max(playing_player : Player, toDepth : int, state : State, depth : int =
     best_value : float = -INF
     for action in getActionsFromState(state, playing_player) :
         new_state = applyActionToState(state=state, action=action, whosMove=whosMove)
-        nextActions, cur_value = min_max(playing_player=playing_player, depth=depth + 1, toDepth=toDepth, state=new_state)
+        nextActions, cur_value = min_max(playing_player=playing_player, depth=depth + 1, toDepth=toDepth, state=new_state, alpha=alpha, beta=beta)
         if cur_value == max([cur_value, best_value]) :
           best_value = cur_value
           best_action = action
+
+        alpha = max(alpha, cur_value)
+        #if beta <= alpha : break
+    
           
   else :
         
@@ -251,10 +255,13 @@ def min_max(playing_player : Player, toDepth : int, state : State, depth : int =
     best_value : float = INF
     for action in getActionsFromState(state, playing_player) :
         new_state = applyActionToState(state=state, action=action, whosMove=whosMove)
-        nextActions, cur_value = min_max(playing_player=playing_player, depth=depth + 1, toDepth=toDepth, state=new_state)
+        nextActions, cur_value = min_max(playing_player=playing_player, depth=depth + 1, toDepth=toDepth, state=new_state, alpha=alpha, beta=beta)
         if cur_value == min([cur_value, best_value]) :
           best_value = cur_value
           best_action = action
+
+        beta = max(beta, cur_value)
+        #if beta <= alpha : break
 
   # 
 

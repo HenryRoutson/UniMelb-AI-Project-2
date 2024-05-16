@@ -685,11 +685,7 @@ def removeColumnsAndRowsOnCoord(coord : Coord , board : Board) -> tuple[Board, b
 
 
 def deriveBoard(original_board : Board, placeActionLst : PlaceActionLst, PlaceColour : PlayerColor) -> tuple[Board, bool] :
-  """
-  This function is hyperoptimised,
-  so don't worry if it looks needlessly complicated
-  
-  """
+
 
   board = qcopy(original_board)
 
@@ -2163,7 +2159,7 @@ class Agent:
           deriveBoardReturn = self.board_state, self.didElim
           return min_max(playing_player=self._color, toDepth=2, stateBeforeAction=self.board_state, isFirstMove=self.firstMove, deriveBoardReturn=deriveBoardReturn)[0][0]
 
-          return greedy_moves(self._color, self.board_state, isFirstMove=self.firstMove)
+          #return greedy_moves(self._color, self.board_state, isFirstMove=self.firstMove)
 
           # Note : mcts is archived as it is too slow
           # return mcts(self._color, self.board_state, iterations=ITERATIONS, isFirstMove=self.firstMove)
