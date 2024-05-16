@@ -234,9 +234,11 @@ def min_max(playing_player : Player, toDepth : int, state : State, depth : int =
 
   whosMove = whosMoveFromDepth(depth, playing_player)
 
+
+  best_action : Optional[Action] = None
+
   if playing_player == whosMove :
 
-    best_action : Optional[Action] = None
     best_value : float = -INF
     for action in getActionsFromState(state, playing_player) :
         new_state = applyActionToState(state=state, action=action, whosMove=whosMove)
@@ -251,7 +253,6 @@ def min_max(playing_player : Player, toDepth : int, state : State, depth : int =
           
   else :
         
-    best_action : Optional[Action] = None
     best_value : float = INF
     for action in getActionsFromState(state, playing_player) :
         new_state = applyActionToState(state=state, action=action, whosMove=whosMove)
@@ -289,4 +290,4 @@ def min_max(playing_player : Player, toDepth : int, state : State, depth : int =
 # ================================================================================
 # call code
 
-print(min_max(toDepth=10, playing_player=PLAYER1, state=START_STATE))
+print(min_max(toDepth=2, playing_player=PLAYER1, state=START_STATE))
