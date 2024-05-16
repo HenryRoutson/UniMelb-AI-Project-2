@@ -226,6 +226,15 @@ def heuristic(state : State, player : Player) -> float :
 
 def min_max(playing_player : Player, toDepth : int, state : State, depth : int = 0, alpha : float = -INF, beta : float = INF) -> tuple[list[Action], float] :
   # TODO clould indent other min for perf
+  
+  # alpha represents best move for max player, so will only update on their move
+  # beta represents best move for min player, so will only update on their move
+
+  # the best next move for alpha is the worst move for beta, hence 
+
+
+
+
   if depth == toDepth : 
     return ([], heuristic(state = state, player= playing_player))
   
