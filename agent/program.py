@@ -2058,27 +2058,23 @@ def greedy_moves(player : Player, fromState : State, isFirstMove : bool) -> Acti
 
 
 
-def min_max(stateBeforeAction : State, deriveBoardReturn : DeriveBoardReturn, playing_player : Player, toDepth : int, isFirstMove : bool, depth : int = 0, ) -> tuple[list[Action], float] :
+def min_max(stateBeforeAction : State, deriveBoardReturn : DeriveBoardReturn, playing_player : Player, toDepth : int, isFirstMove : bool, depth : int = 0) -> tuple[list[Action], float] :
   whosMoveNotPlayer = whosMoveFromDepth(depth, playing_player)
 
+  stateAfterAction : Board = deriveBoardReturn[0]
+  stateWin = isStateWin(stateAfterAction)
+  if not isFirstMove and stateWin != None :
+    print("win at depth", depth)
+    return ([], INF if playing_player == stateWin else -INF)
 
   if depth == toDepth : 
     return ([], heuristic(playerNotWhosMove= playing_player, stateBeforeAction=stateBeforeAction, deriveBoardReturn =deriveBoardReturn))
-  
-  stateAfterAction : Board = deriveBoardReturn[0]
-
-  stateWin = isStateWin(stateAfterAction)
-  if stateWin != None :
-    return ([], INF if playing_player == stateWin else -INF)
-
-  
 
   if playing_player == whosMoveNotPlayer :
 
     best_action : Optional[Action] = None
     best_value : float = -INF
     for action in getActionsFromState(stateAfterAction, playing_player, isFirstMove=isFirstMove) :
-        
         nextActions, cur_value = min_max(playing_player=playing_player, depth=depth + 1, toDepth=toDepth, stateBeforeAction=stateAfterAction, isFirstMove=isFirstMove, deriveBoardReturn=deriveBoard(stateAfterAction, [action], PlaceColour=whosMoveNotPlayer))
         if cur_value == max([cur_value, best_value]) :
           best_value = cur_value
@@ -2101,6 +2097,8 @@ def min_max(stateBeforeAction : State, deriveBoardReturn : DeriveBoardReturn, pl
 
   lst = [best_action]
   lst.extend(nextActions)
+
+  assert(len(lst) != 0)
   return (lst, best_value)
 
 
@@ -2163,6 +2161,7 @@ class Agent:
         def get_action() :
 
           deriveBoardReturn = self.board_state, self.didElim
+          print( min_max(playing_player=self._color, toDepth=2, stateBeforeAction=self.board_state, isFirstMove=self.firstMove, deriveBoardReturn=deriveBoardReturn)[0])
           return min_max(playing_player=self._color, toDepth=2, stateBeforeAction=self.board_state, isFirstMove=self.firstMove, deriveBoardReturn=deriveBoardReturn)[0][0]
 
           return greedy_moves(self._color, self.board_state, isFirstMove=self.firstMove)
