@@ -68,7 +68,7 @@ def tieBreaker(state : State) -> Player :
 
 
 def getActionsFromState(state : State, player : Player) -> list[Action] :
-  x = [1, -1, 2, -2]
+  x = [1, -1] 
   #random.shuffle(x)
   return x
 
@@ -238,11 +238,13 @@ def min_max(playing_player : Player, toDepth : int, state : State, depth : int =
   if depth == toDepth : 
     return ([], heuristic(state = state, player= playing_player))
   
+  # TODO
+  """
   if isStateWin(state) != None :
     return ([], INF if playing_player == isStateWin(state) else -INF)
+  """
 
   whosMove = whosMoveFromDepth(depth, playing_player)
-
 
   best_action : Optional[Action] = None
 
@@ -252,6 +254,7 @@ def min_max(playing_player : Player, toDepth : int, state : State, depth : int =
     for action in getActionsFromState(state, playing_player) :
         new_state = applyActionToState(state=state, action=action, whosMove=whosMove)
         nextActions, cur_value = min_max(playing_player=playing_player, depth=depth + 1, toDepth=toDepth, state=new_state, alpha=alpha, beta=beta)
+
         if cur_value == max([cur_value, best_value]) :
           best_value = cur_value
           best_action = action
@@ -265,6 +268,7 @@ def min_max(playing_player : Player, toDepth : int, state : State, depth : int =
     for action in getActionsFromState(state, playing_player) :
         new_state = applyActionToState(state=state, action=action, whosMove=whosMove)
         nextActions, cur_value = min_max(playing_player=playing_player, depth=depth + 1, toDepth=toDepth, state=new_state, alpha=alpha, beta=beta)
+
         if cur_value == min([cur_value, best_value]) :
           best_value = cur_value
           best_action = action
