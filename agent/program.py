@@ -620,13 +620,19 @@ def coordPlaceOptions(board : Board, through : Coord) -> Iterable[PlaceAction]:
   def filterByBoardSquaresBeingEmpty(placemnt : PlaceAction) :
      return isPiecePlaceSquaresEmpty(placemnt, board)
 
+
+  """ # TODO
+  def makeThrough(placement_index : int) :
+     return makeThroughCenter(placement_index, through) """
+
+
   def makeThrough(placement : PlaceAction) :
      return offsetPlaceAction(placement, through, CENTER) 
 
   placements_through = map(makeThrough, GENERATED_PIECE_PLACEMENTS)
   options = filter(filterByBoardSquaresBeingEmpty, placements_through)
 
-  return options
+  return list(options)
   
   
 
@@ -657,7 +663,7 @@ def placeActionsFromBoard(board : Board, PlaceColour : PlayerColor) -> Iterable[
   for coord in squaresAdjToColourAndEmpty :
    placeOptions.update(coordPlaceOptions(board, coord))
 
-  return placeOptions
+  return list(placeOptions)
 
 
 def qcopy(board : Board) -> Board :
@@ -790,341 +796,6 @@ def coordListToHashable(list : list[Coord]) :
 # COMPILE TIME
 # COMPILE TIME
 ##################################################################################################################################################################################################
-
-
-
-
-
-
-
-
-
-
-
-# a 9 * 0 matrix can include all pieces around the center 4,4
-
-# could use board size but eh
-matrix = [
-       #
-  "000000000",
-  "000000000",
-  "000011000",
-  "000011000",
-  "000000000", # 
-  "000000000",
-  "000000000",
-  "000000000",
-  "000000000",
-
-]
-
-#assert(matrix.__len__() == 9)
-#assert(matrix.__len__() == matrix[0].__len__())
-
-
-MID : int = int((len(matrix) - 1) / 2)
-#assert(MID == 4)
-CENTER = Coord(MID, MID)
-
-
-
-
-def printMatrix(matrix) :
-
-  for row in matrix:
-    print(row)
-  print("is equal to")
-
-  print("PlaceAction(")
-
-  count = 0
-  for r, row in enumerate(matrix):
-    for c, value in enumerate(row):
-      if value == "1" :
-        print(" Coord(" + str(r) +"," + str(c) +"),")
-        count+=1 
-
-  print(")")
-
-  #assert(count == 4)
-
-  
-def coordsToPlaceAction(coords : list[Coord]) -> PlaceAction :
-  #assert(len(coords) == 4)
-  return PlaceAction(coords[0], coords[1], coords[2], coords[3])
-
-
-def placeActionToOrderedCoords(place : PlaceAction) -> list[Coord] :
-  return [place.c1, place.c2, place.c3, place.c4]
-
-
-
-def offsetPlaceAction(place : PlaceAction, add : Coord, sub : Coord) -> PlaceAction :
-
-  delta = add.__sub__(sub)
-
-  # do seperatly to avoid negatives
-  coords = list(map(lambda c : c.__add__(delta), place.coords))
-  return coordsToPlaceAction(coords)
-
-
-"""
-# passing
-
-offset_actual = offsetPlaceAction(
-    PlaceAction(
-      Coord(4,6),
-      Coord(3,4),
-      Coord(3,5),
-      Coord(3,6)
-    ),
-    Coord(1,4),
-    Coord(4,4)
-  )
-
-offset_expected = PlaceAction(
-    Coord(1,6),
-    Coord(0,4),
-    Coord(0,5),
-    Coord(0,6)
-  )
-
-a = (offset_actual == offset_expected)
-if not a :
-  print(offset_actual, offset_expected)
-assert(a)
-
-"""
-
-
-
-def movePlaceActionIndexToCoord(place : PlaceAction, index : int, coord : Coord) -> PlaceAction :
-  other_coord = placeActionToOrderedCoords(place)[index]
-  return offsetPlaceAction(place, coord, other_coord)
-
-
-def adjacentTo(place : PlaceAction, to : Coord) -> bool :
-
-  for coord in place.coords:
-    if to in coordSquareNeighbors(coord): 
-      return True
-
-  """
-  print()
-  print("not adj")
-  
-  print(place, to, end = "")
-  print(" no adj 2")
-  print(render_board(deriveBoard({to : PlayerColor.BLUE}, [place])))
-  """
-  return False
-
-
-"""
-assert( not adjacentTo(
-  PlaceAction(
-    Coord(10,5),
-    Coord(8,5),
-    Coord(0,5),
-    Coord(9,5)
-  ), Coord(1,4))
-)
-
-assert( not adjacentTo(
-  PlaceAction(
-    Coord(0,0),
-    Coord(1,0),
-    Coord(2,0),
-    Coord(3,0)
-  ), Coord(4,1))
-)
-
-"""
-
-
-
-def adjacentToColour(board : Board, place : PlaceAction, colour : PlayerColor) -> bool :
-  # get all colour, remove coords in place
-
-  exisingCoords : set[Coord] = set(getCoordsOfColour(board, colour)) - place.coords # don't want place coords
-
-  for c in exisingCoords :
-    if adjacentTo(place, c) :
-      return True
-  
-  return False
-
-
-
-PIECES_FOR_GENERATING : list[PlaceAction] = [ 
-
-  # I piece
-  PlaceAction(
-    Coord(0,4),
-    Coord(1,4),
-    Coord(2,4),
-    Coord(3,4),
-  ),
-
-  # L piece
-  PlaceAction(
-    Coord(1,4),
-    Coord(1,5),
-    Coord(2,4),
-    Coord(3,4),
-  ),
-
-
-  # Z piece
-
-  PlaceAction(
-    Coord(1,5),
-    Coord(2,4),
-    Coord(2,5),
-    Coord(3,4),
-  ),
-
-
-  # T piece
-  PlaceAction(
-    Coord(2,3),
-    Coord(2,4),
-    Coord(2,5),
-    Coord(3,4),
-  ),
-
-  # O piece
-  PlaceAction(
-    Coord(2,4),
-    Coord(2,5),
-    Coord(3,4),
-    Coord(3,5),
-  )
-
-]
-
-"""
-for place in PIECES_FOR_GENERATING :
-  assert(adjacentTo(place, CENTER))
-"""
-
-
-
-
-def rotateVector90(coord : Vector2, around : Vector2) -> Vector2 :  # using vector to avoid out of bounds
-
-  xCoordToAround = coord.c - around.c 
-  yCoordToAround = around.r - coord.r
-  return Vector2(around.r + xCoordToAround , around.c + yCoordToAround)
-
-"""
-assert(rotateVector90(Vector2(1,1), Vector2(1,1)) == Vector2(1,1))
-assert(rotateVector90(Vector2(0,0), Vector2(1,1)) == Vector2(0,2))
-assert(rotateVector90(Vector2(0,1), Vector2(1,1)) == Vector2(1,2))
-"""
-
-
-def coordToVec2(coord : Coord) -> Vector2 :
-  return Vector2(coord.r, coord.c)
-
-
-def Vec2ToCoord(vec : Vector2) -> Coord :
-  return Coord(vec.r, vec.c)
-
-
-
-def rotatePiece90(place : PlaceAction) -> PlaceAction : 
-
-  # rotate around 90
-  vectors : map[Vector2] =  map(coordToVec2 ,place.coords)
-  rotatedVectors : list[Vector2]  = list(map(lambda c : rotateVector90(c, Vector2(0,0)), vectors))
-
-  # and then move to the lowest coords
-  # used to avoid out of bounds errors
-  min_r = min(map(lambda v : v.r, rotatedVectors))
-  min_c = min(map(lambda v : v.c, rotatedVectors))
-  offset = Vector2(min_r, min_c) 
-  rotatedAndMovedVectors : map[Vector2] = map(lambda vec : vec - offset, rotatedVectors)
-  rotatedAndMovedCoords : list[Coord] = list(map(Vec2ToCoord, rotatedAndMovedVectors))
-
-  return coordsToPlaceAction(rotatedAndMovedCoords)
-
-
-def printPlaceAction(place : PlaceAction) :
-  print("  PlaceAction(")
-
-  for coord in place.coords :
-    print("   Coord(" + str(coord.r) +"," + str(coord.c) +"),")
-
-  print("  ),")
-
-def allPlaceOptionsForPiecesThroughCenter(pieces : PlaceActionLst) -> PlaceActionLst :
-  print("COMPILE TIME CODE")
-
-  BOARD_WITH_CENTER = { CENTER : PlayerColor.BLUE } # visuliase the center
-
-  place_options : set[frozenset[Coord]] = set() # used to avoid duplicates
-
-
-  for piece in pieces :
-
-    for i in range(MAX_PIECE_SIZE) : # each of the piece of the place action
-
-      for _ in range(4) : # covers all rotations, cache as this can be quite complex
-
-        piece = rotatePiece90(piece) # i don't think the rotation point should matter as long as it avoids negative numbers
-        new_piece : PlaceAction = movePlaceActionIndexToCoord(piece, i, CENTER)
-
-        already_found = new_piece.coords in place_options
-        # print("already_found " + str(already_found))
-
-        if (not already_found) :
-
-          assert(CENTER in new_piece.coords) 
-
-          visulising = True
-          if visulising :
-
-            print("GENERATING FOUND")
-            print("new_piece " + str(new_piece))
-            print(render_board(deriveBoard(BOARD_WITH_CENTER, [new_piece], PlayerColor.RED)[0]))
-          
-          else : # generating
-
-            printPlaceAction(new_piece)
-            
-          place_options.add(frozenset(new_piece.coords))
-
-
-  assert(len(place_options) != 0)
-  ret : list[PlaceAction] = [ coordsToPlaceAction([crd for crd in st]) for st in place_options]
-  return ret
-
-
-
-def generate_GENERATED_PIECE_PLACEMENTS() :
-
-    print("GENERATED_PIECE_PLACEMENTS : list[PlaceAction] = [")
-
-    for place in allPlaceOptionsForPiecesThroughCenter(PIECES_FOR_GENERATING) :
-      printPlaceAction(place)
-
-
-    print("]")
-
-
-
-#
-#generate_GENERATED_PIECE_PLACEMENTS()
-
-
-
-
-
-
-
-
-
 
 
 
@@ -1436,6 +1107,363 @@ GENERATED_PIECE_PLACEMENTS : list[PlaceAction] = [
 
 
 
+
+
+
+
+
+# a 9 * 0 matrix can include all pieces around the center 4,4
+
+# could use board size but eh
+matrix = [
+       #
+  "000000000",
+  "000000000",
+  "000011000",
+  "000011000",
+  "000000000", # 
+  "000000000",
+  "000000000",
+  "000000000",
+  "000000000",
+
+]
+
+#assert(matrix.__len__() == 9)
+#assert(matrix.__len__() == matrix[0].__len__())
+
+
+MID : int = int((len(matrix) - 1) / 2)
+#assert(MID == 4)
+CENTER = Coord(MID, MID)
+
+
+
+
+def printMatrix(matrix) :
+
+  for row in matrix:
+    print(row)
+  print("is equal to")
+
+  print("PlaceAction(")
+
+  count = 0
+  for r, row in enumerate(matrix):
+    for c, value in enumerate(row):
+      if value == "1" :
+        print(" Coord(" + str(r) +"," + str(c) +"),")
+        count+=1 
+
+  print(")")
+
+  #assert(count == 4)
+
+  
+def coordsToPlaceAction(coords : list[Coord]) -> PlaceAction :
+  #assert(len(coords) == 4)
+  return PlaceAction(coords[0], coords[1], coords[2], coords[3])
+
+
+def placeActionToOrderedCoords(place : PlaceAction) -> list[Coord] :
+  return [place.c1, place.c2, place.c3, place.c4]
+
+
+
+
+
+def offsetPlaceActionCompileTime(place : PlaceAction, add : Coord, sub : Coord) -> PlaceAction :
+
+  delta = add.__sub__(sub)
+
+  # do seperatly to avoid negatives
+  coords = list(map(lambda c : c.__add__(delta), place.coords))
+  return coordsToPlaceAction(coords)
+
+offsetDictionary = dict()
+zeroCoord = Coord(0,0)
+for place in GENERATED_PIECE_PLACEMENTS :
+
+
+   offsetDictionary[place] = dict()
+
+   for row in range(BOARD_N) :
+    for col in range(BOARD_N) :
+      delta = Coord(row,col)
+      offsetDictionary[place][delta] = offsetPlaceActionCompileTime(place, delta, zeroCoord)
+      
+      
+def offsetPlaceAction(place : PlaceAction, add : Coord, sub : Coord) -> PlaceAction :
+
+  delta = add.__sub__(sub) # TODO remove delta and change to through center
+  return offsetDictionary[place][delta]
+
+
+"""
+# passing
+
+offset_actual = offsetPlaceAction(
+    PlaceAction(
+      Coord(4,6),
+      Coord(3,4),
+      Coord(3,5),
+      Coord(3,6)
+    ),
+    Coord(1,4),
+    Coord(4,4)
+  )
+
+offset_expected = PlaceAction(
+    Coord(1,6),
+    Coord(0,4),
+    Coord(0,5),
+    Coord(0,6)
+  )
+
+a = (offset_actual == offset_expected)
+if not a :
+  print(offset_actual, offset_expected)
+assert(a)
+
+"""
+
+
+
+def movePlaceActionIndexToCoord(place : PlaceAction, index : int, coord : Coord) -> PlaceAction :
+  other_coord = placeActionToOrderedCoords(place)[index]
+  return offsetPlaceAction(place, coord, other_coord)
+
+
+def adjacentTo(place : PlaceAction, to : Coord) -> bool :
+
+  for coord in place.coords:
+    if to in coordSquareNeighbors(coord): 
+      return True
+
+  """
+  print()
+  print("not adj")
+  
+  print(place, to, end = "")
+  print(" no adj 2")
+  print(render_board(deriveBoard({to : PlayerColor.BLUE}, [place])))
+  """
+  return False
+
+
+"""
+assert( not adjacentTo(
+  PlaceAction(
+    Coord(10,5),
+    Coord(8,5),
+    Coord(0,5),
+    Coord(9,5)
+  ), Coord(1,4))
+)
+
+assert( not adjacentTo(
+  PlaceAction(
+    Coord(0,0),
+    Coord(1,0),
+    Coord(2,0),
+    Coord(3,0)
+  ), Coord(4,1))
+)
+
+"""
+
+
+
+def adjacentToColour(board : Board, place : PlaceAction, colour : PlayerColor) -> bool :
+  # get all colour, remove coords in place
+
+  exisingCoords : set[Coord] = set(getCoordsOfColour(board, colour)) - place.coords # don't want place coords
+
+  for c in exisingCoords :
+    if adjacentTo(place, c) :
+      return True
+  
+  return False
+
+
+
+PIECES_FOR_GENERATING : list[PlaceAction] = [ 
+
+  # I piece
+  PlaceAction(
+    Coord(0,4),
+    Coord(1,4),
+    Coord(2,4),
+    Coord(3,4),
+  ),
+
+  # L piece
+  PlaceAction(
+    Coord(1,4),
+    Coord(1,5),
+    Coord(2,4),
+    Coord(3,4),
+  ),
+
+
+  # Z piece
+
+  PlaceAction(
+    Coord(1,5),
+    Coord(2,4),
+    Coord(2,5),
+    Coord(3,4),
+  ),
+
+
+  # T piece
+  PlaceAction(
+    Coord(2,3),
+    Coord(2,4),
+    Coord(2,5),
+    Coord(3,4),
+  ),
+
+  # O piece
+  PlaceAction(
+    Coord(2,4),
+    Coord(2,5),
+    Coord(3,4),
+    Coord(3,5),
+  )
+
+]
+
+"""
+for place in PIECES_FOR_GENERATING :
+  assert(adjacentTo(place, CENTER))
+"""
+
+
+
+
+def rotateVector90(coord : Vector2, around : Vector2) -> Vector2 :  # using vector to avoid out of bounds
+
+  xCoordToAround = coord.c - around.c 
+  yCoordToAround = around.r - coord.r
+  return Vector2(around.r + xCoordToAround , around.c + yCoordToAround)
+
+"""
+assert(rotateVector90(Vector2(1,1), Vector2(1,1)) == Vector2(1,1))
+assert(rotateVector90(Vector2(0,0), Vector2(1,1)) == Vector2(0,2))
+assert(rotateVector90(Vector2(0,1), Vector2(1,1)) == Vector2(1,2))
+"""
+
+
+def coordToVec2(coord : Coord) -> Vector2 :
+  return Vector2(coord.r, coord.c)
+
+
+def Vec2ToCoord(vec : Vector2) -> Coord :
+  return Coord(vec.r, vec.c)
+
+
+
+def rotatePiece90(place : PlaceAction) -> PlaceAction : 
+
+  # rotate around 90
+  vectors : map[Vector2] =  map(coordToVec2 ,place.coords)
+  rotatedVectors : list[Vector2]  = list(map(lambda c : rotateVector90(c, Vector2(0,0)), vectors))
+
+  # and then move to the lowest coords
+  # used to avoid out of bounds errors
+  min_r = min(map(lambda v : v.r, rotatedVectors))
+  min_c = min(map(lambda v : v.c, rotatedVectors))
+  offset = Vector2(min_r, min_c) 
+  rotatedAndMovedVectors : map[Vector2] = map(lambda vec : vec - offset, rotatedVectors)
+  rotatedAndMovedCoords : list[Coord] = list(map(Vec2ToCoord, rotatedAndMovedVectors))
+
+  return coordsToPlaceAction(rotatedAndMovedCoords)
+
+
+def printPlaceAction(place : PlaceAction) :
+  print("  PlaceAction(")
+
+  for coord in place.coords :
+    print("   Coord(" + str(coord.r) +"," + str(coord.c) +"),")
+
+  print("  ),")
+
+def allPlaceOptionsForPiecesThroughCenter(pieces : PlaceActionLst) -> PlaceActionLst :
+  print("COMPILE TIME CODE")
+
+  BOARD_WITH_CENTER = { CENTER : PlayerColor.BLUE } # visuliase the center
+
+  place_options : set[frozenset[Coord]] = set() # used to avoid duplicates
+
+
+  for piece in pieces :
+
+    for i in range(MAX_PIECE_SIZE) : # each of the piece of the place action
+
+      for _ in range(4) : # covers all rotations, cache as this can be quite complex
+
+        piece = rotatePiece90(piece) # i don't think the rotation point should matter as long as it avoids negative numbers
+        new_piece : PlaceAction = movePlaceActionIndexToCoord(piece, i, CENTER)
+
+        already_found = new_piece.coords in place_options
+        # print("already_found " + str(already_found))
+
+        if (not already_found) :
+
+          assert(CENTER in new_piece.coords) 
+
+          visulising = True
+          if visulising :
+
+            print("GENERATING FOUND")
+            print("new_piece " + str(new_piece))
+            print(render_board(deriveBoard(BOARD_WITH_CENTER, [new_piece], PlayerColor.RED)[0]))
+          
+          else : # generating
+
+            printPlaceAction(new_piece)
+            
+          place_options.add(frozenset(new_piece.coords))
+
+
+  assert(len(place_options) != 0)
+  ret : list[PlaceAction] = [ coordsToPlaceAction([crd for crd in st]) for st in place_options]
+  return ret
+
+
+
+def generate_GENERATED_PIECE_PLACEMENTS() :
+
+    print("GENERATED_PIECE_PLACEMENTS : list[PlaceAction] = [")
+
+    for place in allPlaceOptionsForPiecesThroughCenter(PIECES_FOR_GENERATING) :
+      printPlaceAction(place)
+
+
+    print("]")
+
+
+
+#
+#generate_GENERATED_PIECE_PLACEMENTS()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 """
 
 
@@ -1681,7 +1709,7 @@ def playerSquareBias(board : Board, player : Player) -> int :
 
 DeriveBoardReturn = tuple[Board, bool]
 
-def heuristic(stateBeforeAction : State, playerNotWhosMove : Player, deriveBoardReturn : DeriveBoardReturn) -> float :
+def heuristic(stateBeforeAction : State, playerNotWhosMove : Player, deriveBoardReturn : DeriveBoardReturn, smother : bool) -> float :
   # used to pick which value to expand
   # this is much better than expanding randomly
 
@@ -1691,7 +1719,8 @@ def heuristic(stateBeforeAction : State, playerNotWhosMove : Player, deriveBoard
 
   reversedPlayer = reversePlayer(playerNotWhosMove)
 
-  if len(stateBeforeAction.keys()) > 1 :
+  
+  if smother and len(stateBeforeAction.keys()) > 1 :
 
     # this is expensive if you have a high branching factor
     # you should have lots of moves, your opponent should have few
@@ -2037,7 +2066,7 @@ def random_moves(player : Player, fromState : State, isFirstMove : bool) -> Acti
 def greedy_moves(player : Player, fromState : State, isFirstMove : bool) -> Action :
 
   def heuristicFromAction(action : Action) :
-    return heuristic(stateBeforeAction=fromState, playerNotWhosMove=player, deriveBoardReturn=deriveBoard(fromState, [action], player))
+    return heuristic(stateBeforeAction=fromState, playerNotWhosMove=player, deriveBoardReturn=deriveBoard(fromState, [action], player), smother = True)
 
   actions = list(getActionsFromState(fromState, player, isFirstMove))
   actions.sort(key=heuristicFromAction, reverse=True)
@@ -2115,7 +2144,7 @@ def min_max_alphaBeta(stateBeforeAction : State, deriveBoardReturn : DeriveBoard
     return ([], INF if playing_player == stateWin else -INF)
 
   if depth == toDepth : 
-    return ([], heuristic(playerNotWhosMove= playing_player, stateBeforeAction=stateBeforeAction, deriveBoardReturn =deriveBoardReturn))
+    return ([], heuristic(playerNotWhosMove= playing_player, stateBeforeAction=stateBeforeAction, deriveBoardReturn =deriveBoardReturn, smother = False))
 
   if playing_player == whosMoveNotPlayer :
 
@@ -2209,13 +2238,19 @@ class Agent:
 
         def get_action() :
 
+
+          # if branching factor is high, be greedy
+          if len(self.board_state.keys()) < BOARD_N * BOARD_N * 0.7 :
+              return greedy_moves(self._color, self.board_state, isFirstMove=self.firstMove)
+
+          # otherwise you can think ahead
           deriveBoardReturn = self.board_state, self.didElim
           return min_max_alphaBeta(playing_player=self._color, toDepth=2, stateBeforeAction=self.board_state, isFirstMove=self.firstMove, deriveBoardReturn=deriveBoardReturn)[0][0]
 
-          #return greedy_moves(self._color, self.board_state, isFirstMove=self.firstMove)
+          
 
           # Note : mcts is archived as it is too slow
-          # return mcts(self._color, self.board_state, iterations=ITERATIONS, isFirstMove=self.firstMove)
+          """ return mcts(self._color, self.board_state, iterations=ITERATIONS, isFirstMove=self.firstMove) """
 
 
         IS_PROFILE = True
