@@ -644,13 +644,27 @@ def coordsEmpty(board : Board, coords : list[Coord]) -> list[Coord] :
   return list(filter(lambda coord : coord not in board.keys() , coords))
 
 
+def boardFromCoords(coords : list[Coord]) -> Board :
+  b = dict()
+  for coord in coords :
+    b[coord] = PlayerColor.RED
+  
+  return b
+
+
+
 
 def getSquaresAdjToColourAndEmpty(board : Board, PlaceColour : PlayerColor) -> Iterable[Coord] :
   coordsAdjToColour = set()
   for coord in getCoordsOfColour(board, PlaceColour) :
     coordsAdjToColour.update(coordSquareNeighbors(coord))
 
+  #print(PlaceColour)
+  #print(render_board(boardFromCoords(list(coordsAdjToColour))))
+
   coordsAdjToColourAndEmpty = coordsEmpty(board, list(coordsAdjToColour))
+
+  #print(render_board(boardFromCoords(list(coordsAdjToColourAndEmpty))))
 
   return coordsAdjToColourAndEmpty
 
@@ -2451,7 +2465,7 @@ board_dict = parse_board(board_str)
 
 print(render_board(board_dict))
 
-"""
+
 assert(len(list(getActionsFromState(board_dict, PlayerColor.RED, isFirstMove=False))) != 0)
 assert(len(list(getActionsFromState(board_dict, PlayerColor.BLUE, isFirstMove=False))) != 0)
-"""
+
