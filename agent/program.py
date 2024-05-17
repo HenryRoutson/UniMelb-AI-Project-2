@@ -78,7 +78,7 @@ from typing import Generator
 BOARD_N = 11
 
 BOARD_N_SQUARED = BOARD_N * BOARD_N
-
+DENSE_BOARD = BOARD_N_SQUARED * 0.8
 
 
 @dataclass(frozen=True, slots=True)
@@ -1777,7 +1777,7 @@ def heuristic(stateBeforeAction : State, playerNotWhosMove : Player, deriveBoard
 
 
   heuristic_elimination_prevention = 0
-  if len(stateBeforeAction.keys()) <BOARD_N_SQUARED * 0.6 :
+  if len(stateBeforeAction.keys()) < DENSE_BOARD :
 
     heuristic_elimination_prevention = (- subTop3numberOfCoordsInColumnAndRows(stateAfterAction, playerNotWhosMove) + subTop3numberOfCoordsInColumnAndRows(stateAfterAction, reversedPlayer))
     heuristic_value += heuristic_elimination_prevention 
@@ -2314,7 +2314,7 @@ class Agent:
         def get_action() :
 
 
-          isSparseBoard = len(self.board_state.keys()) < BOARD_N_SQUARED * 0.6 # if branching factor is high, be greedy
+          isSparseBoard = len(self.board_state.keys()) < DENSE_BOARD# if branching factor is high, be greedy
           isLowOnTime = referee["time_remaining"] and referee["time_remaining"] < 25
           if isSparseBoard or isLowOnTime :
               print("Greedy <")

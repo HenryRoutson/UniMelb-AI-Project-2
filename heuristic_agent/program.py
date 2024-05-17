@@ -2107,6 +2107,10 @@ def random_moves(player : Player, fromState : State, isFirstMove : bool) -> Acti
 
 def greedy_moves(player : Player, fromState : State, isFirstMove : bool) -> Action :
 
+  if isFirstMove : # for debugging
+      actions = getActionsFromState(fromState, player, isFirstMove)
+      return random.choice(list(actions))
+
   def heuristicFromAction(action : Action) :
     return heuristic(stateBeforeAction=fromState, playerNotWhosMove=player, deriveBoardReturn=deriveBoard(fromState, [action], player), smother = True)
 
