@@ -2450,3 +2450,5 @@ board_dict = parse_board(board_str)
 
 print(render_board(board_dict))
 
+assert(len(list(getActionsFromState(board_dict, PlayerColor.RED, isFirstMove=False))) != 0)
+assert(len(list(getActionsFromState(board_dict, PlayerColor.BLUE, isFirstMove=False))) != 0)
