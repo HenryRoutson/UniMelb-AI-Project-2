@@ -663,7 +663,7 @@ def placeActionsFromBoard(board : Board, PlaceColour : PlayerColor) -> Iterable[
   squaresAdjToColourAndEmpty = getSquaresAdjToColourAndEmpty(board, PlaceColour)
   
   placeOptions = set()
-  for coord in squaresAdjToColourAndEmpty :
+  for coord in squaresAdjToColourAndEmpty:
    placeOptions.update(coordPlaceOptions(board, coord))
 
   return list(placeOptions)
@@ -2400,6 +2400,7 @@ for place in GENERATED_PIECE_PLACEMENTS :
 
 
 
+"""
 
 def parse_board(board_str):
     board_str = board_str.replace(" ", "")
@@ -2452,3 +2453,6 @@ print(render_board(board_dict))
 
 assert(len(list(getActionsFromState(board_dict, PlayerColor.RED, isFirstMove=False))) != 0)
 assert(len(list(getActionsFromState(board_dict, PlayerColor.BLUE, isFirstMove=False))) != 0)
+
+
+"""
