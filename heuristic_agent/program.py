@@ -36,8 +36,6 @@
 
 
 
-
-
 # COMP30024 Artificial Intelligence, Semester 1 2024
 # Project Part A: Single Player Tetress
 
@@ -76,8 +74,6 @@ from typing import Generator
 #          in `program.py` instead, as discussed in the specification.
 
 BOARD_N = 11
-
-BOARD_N_SQUARED = BOARD_N * BOARD_N
 
 
 
@@ -1629,6 +1625,9 @@ assert(wrappingIndexDistance(3, 6) == 3)
 
 
 
+
+
+
 # COMP30024 Artificial Intelligence, Semester 1 2024
 # Project Part B: Game Playing Agent
 
@@ -1737,7 +1736,7 @@ def playerSquareBias(board : Board, player : Player) -> int :
 
 DeriveBoardReturn = tuple[Board, bool]
 
-def heuristic(stateBeforeAction : State, playerNotWhosMove : Player, deriveBoardReturn : DeriveBoardReturn, isPrintHeuristic : bool = False) -> float :
+def heuristic(stateBeforeAction : State, playerNotWhosMove : Player, deriveBoardReturn : DeriveBoardReturn, smother : bool) -> float :
   # used to pick which value to expand
   # this is much better than expanding randomly
 
@@ -1747,18 +1746,16 @@ def heuristic(stateBeforeAction : State, playerNotWhosMove : Player, deriveBoard
 
   reversedPlayer = reversePlayer(playerNotWhosMove)
 
-  heuristic_smother = 0
-  if len(stateBeforeAction.keys()) > 1 :
+  
+  if smother and len(stateBeforeAction.keys()) > 1 :
 
     # this is expensive if you have a high branching factor
     # you should have lots of moves, your opponent should have few
 
     #movesForThisPlayer = len(list(getSquaresAdjToColourAndEmpty(stateAfterAction, player))) / 10
-    heuristic_smother = len(list(getSquaresAdjToColourAndEmpty(stateAfterAction, reversedPlayer))) * 10
-    heuristic_value -= heuristic_smother
+    heuristic_value -= len(list(getSquaresAdjToColourAndEmpty(stateAfterAction, reversedPlayer))) 
 
 
-  heuristicSquareCountDifference = 0
   if isElim :
 
     countsBefore = Counter(stateBeforeAction.values())
@@ -1768,27 +1765,16 @@ def heuristic(stateBeforeAction : State, playerNotWhosMove : Player, deriveBoard
     deltaThisPlayersPieces = countsAfter[playerNotWhosMove] - countsBefore[playerNotWhosMove]
 
 
-    heuristicSquareCountDifference = (deltaThisPlayersPieces - deltaOtherPlayersPieces - MAX_PIECE_SIZE - 1 - 1) * 1000
+    heuristicSquareCountDifference = deltaThisPlayersPieces - deltaOtherPlayersPieces - MAX_PIECE_SIZE - 1 - 1
     # -1 means break evens aren't taken, another -1 means they are later or by other player
 
 
-    heuristic_value += heuristicSquareCountDifference   # if there is the possibility to eliminate, this should be important
+    heuristic_value += heuristicSquareCountDifference * 1000 # if there is the possibility to eliminate, this should be important
 
 
-
-  heuristic_elimination_prevention = 0
-  if len(stateBeforeAction.keys()) <BOARD_N_SQUARED * 0.6 :
-
-    heuristic_elimination_prevention = (- subTop3numberOfCoordsInColumnAndRows(stateAfterAction, playerNotWhosMove) + subTop3numberOfCoordsInColumnAndRows(stateAfterAction, reversedPlayer))
-    heuristic_value += heuristic_elimination_prevention 
-
-
-  isPrintHeuristic = False
-  if isPrintHeuristic :
-     
-     render_board(stateAfterAction)
-     print("smother ", heuristic_smother, " heuristicSquareCountDifference ", heuristicSquareCountDifference, " heuristic_elimination_prevention ", heuristic_elimination_prevention)
-  
+  # elimination prevention isn't that effective, as the board fills up and it's pointless
+  # eliminationPrevention = (- subTop3numberOfCoordsInColumnAndRows(stateAfterAction, player) + subTop3numberOfCoordsInColumnAndRows(stateAfterAction, reversedPlayer)) / 3
+  # heuristic_value += eliminationPrevention
 
   return heuristic_value
 
@@ -1847,7 +1833,7 @@ def getSortedActionsFromState(state : State, player : Player, PlaceColour : Play
   def sort_action_result(action_result : tuple[Action, tuple[Board, bool]]) -> float :
      (action, result) = action_result
 
-     return heuristic(stateBeforeAction=state, playerNotWhosMove=player, deriveBoardReturn=result)
+     return heuristic(stateBeforeAction=state, playerNotWhosMove=player, deriveBoardReturn=result, smother=False)
 
   action_result.sort(key=sort_action_result, reverse=True)
   return action_result
@@ -2122,7 +2108,7 @@ def random_moves(player : Player, fromState : State, isFirstMove : bool) -> Acti
 def greedy_moves(player : Player, fromState : State, isFirstMove : bool) -> Action :
 
   def heuristicFromAction(action : Action) :
-    return heuristic(stateBeforeAction=fromState, playerNotWhosMove=player, deriveBoardReturn=deriveBoard(fromState, [action], player))
+    return heuristic(stateBeforeAction=fromState, playerNotWhosMove=player, deriveBoardReturn=deriveBoard(fromState, [action], player), smother = True)
 
   actions = list(getActionsFromState(fromState, player, isFirstMove))
   actions.sort(key=heuristicFromAction, reverse=True)
@@ -2201,7 +2187,7 @@ def min_max_alphaBeta(stateBeforeAction : State, deriveBoardReturn : DeriveBoard
     return ([], INF if playing_player == stateWin else -INF)
 
   if depth == toDepth : 
-    return ([], heuristic(playerNotWhosMove= playing_player, stateBeforeAction=stateBeforeAction, deriveBoardReturn =deriveBoardReturn))
+    return ([], heuristic(playerNotWhosMove= playing_player, stateBeforeAction=stateBeforeAction, deriveBoardReturn =deriveBoardReturn, smother = False))
   
 
   #
@@ -2211,9 +2197,7 @@ def min_max_alphaBeta(stateBeforeAction : State, deriveBoardReturn : DeriveBoard
   if len(zipped_action_derivedResult) == 0 :
     return ([], -INF if playing_player == stateWin else INF)
 
-
-  limitBranching = False
-  if limitBranching and depth != 0 :
+  if depth != 0 :
     zipped_action_derivedResult = zipped_action_derivedResult[:10] # only take best actions for time efficiency
   best_action : Optional[Action] = None
 
@@ -2313,20 +2297,9 @@ class Agent:
 
         def get_action() :
 
+          return greedy_moves(self._color, self.board_state, isFirstMove=self.firstMove)
 
-          isSparseBoard = len(self.board_state.keys()) < BOARD_N_SQUARED * 0.6 # if branching factor is high, be greedy
-          isLowOnTime = referee["time_remaining"] and referee["time_remaining"] < 25
-          if isSparseBoard or isLowOnTime :
-              print("Greedy <")
-              return greedy_moves(self._color, self.board_state, isFirstMove=self.firstMove)
-
-              
-          # otherwise you can think ahead, get out of tough spots
-          print("AlphaBeta <")
-          return min_max_alphaBeta(playing_player=self._color, toDepth=2, stateBeforeAction=self.board_state, isFirstMove=self.firstMove, deriveBoardReturn=(self.board_state, self.didElim))[0][0]
-
-
-
+      
           # Note : mcts is archived as it is too slow
           """ return mcts(self._color, self.board_state, iterations=ITERATIONS, isFirstMove=self.firstMove) """
 

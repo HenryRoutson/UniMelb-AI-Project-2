@@ -6,8 +6,8 @@ DEBUG = True
 C = 0.01 # from Upper Confidence Bound formula
 
 # These two numbers should increase together
-ITERATIONS = 100
-EXPLORE_MIN = 13
+ITERATIONS = 150
+EXPLORE_MIN = 35
 
 
 

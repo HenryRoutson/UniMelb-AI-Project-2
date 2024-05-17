@@ -17,4 +17,10 @@ python -m referee -t 1000000 agent agent
 
 
 
+
+
+python -m referee -t 1000000 heuristic_agent agent  
+
+
+
 python3 minmax.py
