@@ -78,7 +78,7 @@ from typing import Generator
 BOARD_N = 11
 
 BOARD_N_SQUARED = BOARD_N * BOARD_N
-DENSE_BOARD = BOARD_N_SQUARED * 0.8
+DENSE_BOARD = BOARD_N_SQUARED * 0.7
 
 
 @dataclass(frozen=True, slots=True)
@@ -667,6 +667,11 @@ def placeActionsFromBoard(board : Board, PlaceColour : PlayerColor) -> Iterable[
    placeOptions.update(coordPlaceOptions(board, coord))
 
   return list(placeOptions)
+
+
+
+
+  
 
 
 def qcopy(board : Board) -> Board :
@@ -1768,8 +1773,8 @@ def heuristic(stateBeforeAction : State, playerNotWhosMove : Player, deriveBoard
     deltaThisPlayersPieces = countsAfter[playerNotWhosMove] - countsBefore[playerNotWhosMove]
 
 
-    heuristicSquareCountDifference = (deltaThisPlayersPieces - deltaOtherPlayersPieces - MAX_PIECE_SIZE - 1 - 1) * 1000
-    # -1 means break evens aren't taken, another -1 means they are later or by other player
+    heuristicSquareCountDifference = (deltaThisPlayersPieces - deltaOtherPlayersPieces - MAX_PIECE_SIZE - 1 - 2) * 1000
+    # -1 means break evens aren't taken, another -2 saves elim for later
 
 
     heuristic_value += heuristicSquareCountDifference   # if there is the possibility to eliminate, this should be important
@@ -2314,7 +2319,7 @@ class Agent:
         def get_action() :
 
 
-          isSparseBoard = len(self.board_state.keys()) < DENSE_BOARD# if branching factor is high, be greedy
+          isSparseBoard = len(self.board_state.keys()) < DENSE_BOARD # if branching factor is high, be greedy
           isLowOnTime = referee["time_remaining"] and referee["time_remaining"] < 25
           if isSparseBoard or isLowOnTime :
               print("Greedy <")
@@ -2368,4 +2373,80 @@ class Agent:
 
 
 
+
+
+
+
+
+
+
+# verify
+
+# MAKE SPECIFIC EXAMPLE
+
+
+filledBoard = dict()
+for coord in allCoords :
+   filledBoard[coord] = PlayerColor.RED
+
+
+for place in GENERATED_PIECE_PLACEMENTS :
+  board = qcopy(filledBoard)
+
+  for key in place.coords :
+     board.pop(key)
+
+  assert(place in coordPlaceOptions(board, through=place.c1))
+
+
+
+
+def parse_board(board_str):
+    board_str = board_str.replace(" ", "")
+
+    print(board_str)
+
+    rows = board_str.split("\n")
+    rows.remove("")
+    rows.remove("")
+
+
+    d = {}
+    for row_idx, row in enumerate(rows):
+        
+        assert(row_idx < BOARD_N)
+        
+        for col_idx, character in enumerate(row) :
+              
+              assert(col_idx < BOARD_N)
+
+             
+              coord = Coord(row_idx, col_idx)
+
+              if character == "r" :
+                d[coord] = PlayerColor.RED
+              if character == "b" : 
+                d[coord] = PlayerColor.BLUE
+              
+    return d
+
+
+board_str = """
+b r r r r . r r b b b 
+b . b b b r r r b b b 
+b r b r r r b . b r r 
+b b b r r r b . b r r 
+b . b r . . b b b b b 
+. b b r r r b b . . . 
+. b r r r r r b . b . 
+. b r . . r r b r b . 
+. b . r r r r r r b . 
+. b b b b b . b r b . 
+b r r b . b r b b b b
+"""
+
+
+board_dict = parse_board(board_str)
+
+print(render_board(board_dict))
 
